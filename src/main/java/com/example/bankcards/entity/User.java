@@ -2,25 +2,21 @@ package com.example.bankcards.entity;
 
 
 import com.example.bankcards.entity.interfaces.Card;
-import com.example.bankcards.entity.interfaces.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
-
 
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Data
-public class UserImpl implements User {
+@Table(name = "users")
+@Data @NoArgsConstructor @AllArgsConstructor
+public class User {          // просто User, без Impl
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;         // Long, не Integer
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -28,31 +24,17 @@ public class UserImpl implements User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @NonNull@Column(nullable = false)
-    private  String password;
+    @Column(nullable = false)
+    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-    private List<Card> cards;
+    private List<CardImpl> cards; // Card — конкретный Entity класс
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    @Override
-    public void getAllCards() {
-
-    }
-
-    @Override
-    public void transactions() {
-
-    }
-
-    @Override
-    public void balance() {
-
-    }
+    // Никаких методов-действий!
 }

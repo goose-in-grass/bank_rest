@@ -1,7 +1,6 @@
 package com.example.bankcards.entity;
 
 import com.example.bankcards.entity.interfaces.Card;
-import com.example.bankcards.entity.interfaces.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "cards")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -27,7 +27,7 @@ public class CardImpl implements Card {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
-    private UserImpl owner;
+    private User owner;
 
     @Column(name = "cardholder_name", nullable = false)
     private String cardholderName;
