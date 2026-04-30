@@ -1,6 +1,9 @@
 package com.example.bankcards.controller;
 
+import com.example.bankcards.dto.Requests.TransferRequest;
 import com.example.bankcards.dto.Responses.CardResponse;
+import com.example.bankcards.entity.User;
+import com.example.bankcards.repository.Interfaces.UserRepository;
 import com.example.bankcards.service.CardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class CardController {
 
     private final CardService cardService;
+    private final UserRepository userRepository;
 
     @GetMapping
     public ResponseEntity<Page<CardResponse>> getMyCards(
@@ -50,7 +54,7 @@ public class CardController {
     @PostMapping("/transfer")
     public ResponseEntity<Void> transfer(
             @AuthenticationPrincipal UserDetails user,
-            @RequestBody com.example.bankcards.dto.Requests.TransferRequest request) {
+            @RequestBody TransferRequest request) {
 
         Long userId = getUserIdFromPrincipal(user);
         cardService.transfer(request, userId);
@@ -61,6 +65,10 @@ public class CardController {
         if (user == null) {
             throw new IllegalArgumentException("Пользователь не авторизован");
         }
-        return 1L;
+
+        User currentUser = userRepository.findByUsername(user.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+
+        return currentUser.getId();
     }
 }

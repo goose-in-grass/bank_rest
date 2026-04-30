@@ -32,7 +32,7 @@ public class CardServiceImpl implements CardService {
     public Page<CardResponse> getMyCards(Long userId, Pageable pageable, String status) {
         List<CardResponse> cards = cardRepository.findAll().stream()
                 .filter(card -> card.getOwner() != null && card.getOwner().getId().equals(userId))
-                .filter(card -> status == null || status.isBlank() || card.getStatus().name().equalsIgnoreCase(status))
+                .filter(card -> matchesStatus(card, status))
                 .map(this::toResponse)
                 .toList();
 
@@ -41,8 +41,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     public BigDecimal getBalance(Long cardId, Long userId) {
-        Card card = getOwnedCard(cardId, userId);
-        return card.getBalance();
+        return getOwnedCard(cardId, userId).getBalance();
     }
 
     @Override
@@ -118,11 +117,15 @@ public class CardServiceImpl implements CardService {
     @Override
     public Page<CardResponse> getAllCards(Pageable pageable, String status) {
         List<CardResponse> cards = cardRepository.findAll().stream()
-                .filter(card -> status == null || status.isBlank() || card.getStatus().name().equalsIgnoreCase(status))
+                .filter(card -> matchesStatus(card, status))
                 .map(this::toResponse)
                 .toList();
 
         return new PageImpl<>(cards, pageable, cards.size());
+    }
+
+    private boolean matchesStatus(Card card, String status) {
+        return status == null || status.isBlank() || card.getStatus().name().equalsIgnoreCase(status);
     }
 
     private Card getOwnedCard(Long cardId, Long userId) {
@@ -169,9 +172,12 @@ public class CardServiceImpl implements CardService {
     private String generateCardNumber(Long ownerId) {
         long base = System.currentTimeMillis() + (ownerId == null ? 0 : ownerId);
         String digits = String.valueOf(Math.abs(base));
-        while (digits.length() < 16) {
-            digits = "0" + digits;
+
+        StringBuilder builder = new StringBuilder(digits);
+        while (builder.length() < 16) {
+            builder.insert(0, '0');
         }
-        return digits.substring(0, 16);
+
+        return builder.substring(0, 16);
     }
 }

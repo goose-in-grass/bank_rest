@@ -12,6 +12,7 @@ class startApplication {
 
 }
 //TODO обновление статуса по сроку действия карты
+//TODO: JwtUtil  что это
 
 
 
