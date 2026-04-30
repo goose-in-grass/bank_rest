@@ -1,6 +1,7 @@
 package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.Requests.TransferRequest;
+import jakarta.validation.Valid;
 import com.example.bankcards.dto.Responses.CardResponse;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.repository.Interfaces.UserRepository;
@@ -60,7 +61,7 @@ public class CardController {
     @PostMapping("/transfer")
     public ResponseEntity<Void> transfer(
             @AuthenticationPrincipal UserDetails user,
-            @RequestBody TransferRequest request) {
+            @Valid @RequestBody TransferRequest request) {
 
         Long userId = getUserIdFromPrincipal(user);
         cardService.transfer(request, userId);
