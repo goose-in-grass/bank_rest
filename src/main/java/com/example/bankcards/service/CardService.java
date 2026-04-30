@@ -9,20 +9,14 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 
 public interface CardService {
-    Page<CardResponse> getMyCards(Long userId, java.awt.print.Pageable p, String status);
-
-    // USER
     Page<CardResponse> getMyCards(Long userId, Pageable p, String status);
     BigDecimal getBalance(Long cardId, Long userId);
     void requestBlock(Long cardId, Long userId);
     void transfer(TransferRequest req, Long userId);
 
-    // ADMIN
     CardResponse createCard(CreateCardRequest req);
     void blockCard(Long cardId);
     void activateCard(Long cardId);
     void deleteCard(Long cardId);
     Page<CardResponse> getAllCards(Pageable p, String status);
-
-    Page<CardResponse> getAllCards(java.awt.print.Pageable p, String status);
 }
