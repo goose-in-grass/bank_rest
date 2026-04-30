@@ -20,16 +20,14 @@ public class SecurityConfig {
                                 "/login.html",
                                 "/register",
                                 "/register.html",
-                                "/home",
-                                "/home.html",
-                                "/admin",
-                                "/admin.html",
                                 "/app.js",
                                 "/favicon.ico",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**"
                         ).permitAll()
+                        .requestMatchers("/home.html", "/admin.html").authenticated()
+                        .requestMatchers("/home", "/admin").authenticated()
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form.disable())

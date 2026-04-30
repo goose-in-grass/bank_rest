@@ -1,1 +1,54 @@
-<button class="primary" onclick="register()">Зарегистрироваться</button>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация — Bank REST</title>
+    <style>
+        body { margin:0; font-family: Arial, sans-serif; background:#0f172a; color:#e5e7eb; }
+        .wrap { max-width:520px; margin:40px auto; padding:24px; }
+        .card { background:#111827; border:1px solid #374151; border-radius:16px; padding:24px; }
+        label { display:block; margin:12px 0 6px; color:#9ca3af; font-size:14px; }
+        input, button { width:100%; box-sizing:border-box; border-radius:10px; padding:12px; font-size:14px; }
+        input { border:1px solid #374151; background:#0b1220; color:#e5e7eb; }
+        button { margin-top:12px; border:none; cursor:pointer; font-weight:700; }
+        .primary { background:#34d399; color:#052e2b; }
+        .secondary { background:#374151; color:white; }
+        .muted { color:#9ca3af; font-size:13px; }
+        pre { margin-top:16px; white-space:pre-wrap; background:#020617; padding:12px; border-radius:12px; border:1px solid #374151; min-height:80px; }
+        .toplinks { display:flex; justify-content:space-between; margin-top:14px; font-size:14px; }
+        a { color:#93c5fd; text-decoration:none; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <h1>Регистрация</h1>
+        <p class="muted">Создание нового пользователя</p>
+
+        <label for="username">Логин</label>
+        <input id="username" type="text" placeholder="newuser">
+
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="user@mail.com">
+
+        <label for="password">Пароль</label>
+        <input id="password" type="password" placeholder="••••••••">
+
+        <button class="primary" onclick="register()">Зарегистрироваться</button>
+        <button class="secondary" onclick="goLogin()">Уже есть аккаунт</button>
+
+
+
+        <pre id="output">{}</pre>
+    </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+    function goLogin() {
+        window.location.href = "/login.html";
+    }
+</script>
+</body>
+</html>
