@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Главная — Bank REST</title>
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#0f172a; color:#e5e7eb; }
+    .container { max-width:1200px; margin:0 auto; padding:24px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); gap:16px; }
+    .card { background:#111827; border:1px solid #374151; border-radius:16px; padding:20px; }
+    label { display:block; margin:12px 0 6px; color:#9ca3af; font-size:14px; }
+    input, button, select { width:100%; box-sizing:border-box; border-radius:10px; padding:12px; font-size:14px; }
+    input, select { border:1px solid #374151; background:#0b1220; color:#e5e7eb; }
+    button { margin-top:12px; border:none; cursor:pointer; font-weight:700; background:#60a5fa; color:white; }
+    .secondary { background:#374151; }
+    .success { background:#34d399; color:#052e2b; }
+    .danger { background:#f87171; color:#3b0a0a; }
+    .muted { color:#9ca3af; font-size:13px; }
+    pre { margin-top:16px; white-space:pre-wrap; background:#020617; padding:12px; border-radius:12px; border:1px solid #374151; min-height:180px; overflow:auto; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .topbar { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:20px; }
+    .nav a { color:#93c5fd; text-decoration:none; margin-right:12px; }
+    .cards-list { display:grid; gap:10px; margin-top:12px; }
+    .card-item { border:1px solid #374151; border-radius:12px; padding:12px; background:#0b1220; }
+    .card-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .card-actions button { width:auto; padding:8px 12px; margin-top:0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div>
+      <h1>Главная</h1>
+      <div class="muted">Мои карты и пользовательские операции</div>
+    </div>
+    <div class="nav">
+      <a href="/login.html">Вход</a>
+      <a href="/register.html">Регистрация</a>
+      <a href="/admin.html">Админка</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Мои карты</h2>
+      <div class="row">
+        <div>
+          <label>Page</label>
+          <input id="cardsPage" type="number" value="0" min="0">
+        </div>
+        <div>
+          <label>Size</label>
+          <input id="cardsSize" type="number" value="10" min="1">
+        </div>
+      </div>
+
+      <label>Status filter</label>
+      <input id="cardsStatus" type="text" placeholder="ACTIVE">
+
+      <button onclick="loadMyCards()">Загрузить карты</button>
+      <div id="cardsContainer" class="cards-list"></div>
+    </div>
+
+    <div class="card">
+      <h2>Баланс карты</h2>
+      <label>Card ID</label>
+      <input id="balanceCardId" type="number" placeholder="1">
+      <button onclick="getBalance()">Показать баланс</button>
+    </div>
+
+    <div class="card">
+      <h2>Запрос блокировки</h2>
+      <label>Card ID</label>
+      <input id="blockCardId" type="number" placeholder="1">
+      <button class="danger" onclick="requestBlock()">Отправить запрос</button>
+    </div>
+
+    <div class="card">
+      <h2>Перевод</h2>
+      <label>From card number</label>
+      <input id="fromCardNumber" type="text" placeholder="1234567890123456">
+      <label>To card number</label>
+      <input id="toCardNumber" type="text" placeholder="1234567890123456">
+      <label>Amount</label>
+      <input id="transferAmount" type="number" step="0.01" placeholder="100.00">
+      <button class="success" onclick="transfer()">Перевести</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h2>Ответ сервера</h2>
+    <pre id="output">{}</pre>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  async function loadMyCards() {
+    try {
+      const page = document.getElementById("cardsPage").value || 0;
+      const size = document.getElementById("cardsSize").value || 10;
+      const status = document.getElementById("cardsStatus").value.trim();
+
+      let url = `/api/cards?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}`;
+      if (status) url += `&status=${encodeURIComponent(status)}`;
+
+      const data = await apiGet(url);
+      setOutput(data);
+      renderCards(data.content || []);
+    } catch (e) {
+      setOutput({ error: e.message });
+    }
+  }
+
+  function renderCards(cards) {
+    const container = document.getElementById("cardsContainer");
+    container.innerHTML = "";
+
+    if (!cards.length) {
+      container.innerHTML = '<div class="muted">Карт нет или API пока не вернул данные.</div>';
+      return;
+    }
+
+    cards.forEach(card => {
+      const div = document.createElement("div");
+      div.className = "card-item";
+      div.innerHTML = `
+                <div><strong>#${card.id}</strong> — ${card.cardholderName || ""}</div>
+                <div class="muted">${card.cardNumberMasked || ""}</div>
+                <div>Status: ${card.status || ""}</div>
+                <div>Balance: ${card.balance ?? ""}</div>
+                <div>Owner: ${card.ownerId ?? ""}</div>
+                <div class="card-actions">
+                    <button onclick="fillBalance(${card.id})">Balance</button>
+                    <button class="danger" onclick="fillBlock(${card.id})">Block</button>
+                </div>
+            `;
+      container.appendChild(div);
+    });
+  }
+
+  function fillBalance(id) {
+    document.getElementById("balanceCardId").value = id;
+    getBalance();
+  }
+
+  function fillBlock(id) {
+    document.getElementById("blockCardId").value = id;
+    requestBlock();
+  }
+
+  async function getBalance() {
+    try {
+      const cardId = document.getElementById("balanceCardId").value;
+      const data = await apiGet(`/api/cards/${encodeURIComponent(cardId)}/balance`);
+      setOutput(data);
+    } catch (e) {
+      setOutput({ error: e.message });
+    }
+  }
+
+  async function requestBlock() {
+    try {
+      const cardId = document.getElementById("blockCardId").value;
+      const data = await apiPost(`/api/cards/${encodeURIComponent(cardId)}/block-request`, {});
+      setOutput(data || { message: "ok" });
+    } catch (e) {
+      setOutput({ error: e.message });
+    }
+  }
+
+  async function transfer() {
+    try {
+      const body = {
+        fromCardNumber: document.getElementById("fromCardNumber").value.trim(),
+        toCardNumber: document.getElementById("toCardNumber").value.trim(),
+        amount: Number(document.getElementById("transferAmount").value)
+      };
+
+      const data = await apiPost("/api/cards/transfer", body);
+      setOutput(data || { message: "ok" });
+    } catch (e) {
+      setOutput({ error: e.message });
+    }
+  }
+
+  loadMyCards();
+</script>
+</body>
+</html>
