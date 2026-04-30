@@ -102,7 +102,7 @@
       transition: border-color 0.2s;
     }
 
-    input:focus { outline: none; border-color: var(--accent-blue); }
+    input:focus, select:focus { outline: none; border-color: var(--accent-blue); }
 
     button {
       width: 100%;
@@ -195,9 +195,11 @@
 
   <div class="dashboard-grid">
 
-    <!-- LEFT COLUMN: CARDS -->
+    <!-- LEFT COLUMN: MY CARDS -->
     <div class="panel">
-      <h2> Мои карты</h2>
+      <h2>📇 Мои карты</h2>
+
+      <!-- Filters for cards -->
       <div class="row-inputs" style="max-width: 400px; margin-bottom: 16px;">
         <div>
           <label>Страница</label>
@@ -215,20 +217,25 @@
 
       <button class="btn-primary" onclick="loadMyCards()" style="max-width: 200px;">Обновить список</button>
 
+      <!-- Container for Visual Cards -->
       <div id="cardsContainer" class="cards-list-container">
-        <!-- Cards will be injected here -->
+        <!-- Cards will be injected here by JS -->
       </div>
     </div>
 
     <!-- RIGHT COLUMN: TRANSFER & LOGS -->
     <div style="display: flex; flex-direction: column; gap: 24px;">
 
-      <!-- Transfer Money Panel (Expanded) -->
+      <!-- Transfer Money Panel with Dropdown -->
       <div class="panel">
         <h2>💸 Быстрый перевод</h2>
 
         <label>Отправитель (Ваша карта)</label>
-        <input id="fromCardNumber" type="text" placeholder="Введите номер карты или ID">
+        <select id="fromCardSelect" style="margin-bottom: 8px;">
+          <option value="" disabled selected>Выберите карту...</option>
+        </select>
+        <!-- Balance Hint -->
+        <div id="senderBalanceHint" class="muted" style="font-size: 12px; margin-bottom: 16px; height: 15px;"></div>
 
         <label>Получатель</label>
         <input id="toCardNumber" type="text" placeholder="Номер карты получателя">
@@ -250,6 +257,9 @@
 
 <script src="/app.js"></script>
 <script>
+  // Глобальный кэш для карт, чтобы заполнять селект
+  let myCardsCache = [];
+
   function setOutput(data) {
     const el = document.getElementById('output');
     el.textContent = JSON.stringify(data, null, 2);
@@ -266,11 +276,53 @@
 
       const data = await apiGet(url);
       setOutput(data);
-      renderCardsVisual(data.content || []);
+
+      // Сохраняем в кэш
+      myCardsCache = data.content || [];
+
+      renderCardsVisual(myCardsCache);
+      populateSenderDropdown(myCardsCache); // Заполняем выпадающий список
     } catch (e) {
       setOutput({ error: e.message });
     }
   }
+
+  // Функция заполнения выпадающего списка
+  function populateSenderDropdown(cards) {
+    const select = document.getElementById("fromCardSelect");
+    select.innerHTML = '<option value="" disabled selected>Выберите карту...</option>';
+
+    if (!cards.length) return;
+
+    cards.forEach(card => {
+      // Показываем только активные карты для перевода
+      if (card.status !== 'ACTIVE') return;
+
+      const option = document.createElement("option");
+      // Используем номер карты как значение (если API требует номер) или ID
+      option.value = card.cardNumber;
+      option.textContent = `${card.cardholderName || 'Card'} •••• ${card.cardNumber ? card.cardNumber.slice(-4) : '0000'}`;
+
+      // Сохраняем баланс в data-атрибут
+      option.dataset.balance = card.balance ?? card.amount ?? 0;
+
+      select.appendChild(option);
+    });
+  }
+
+  // Слушатель изменения выбора в списке
+  document.getElementById("fromCardSelect").addEventListener("change", function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const balance = selectedOption.dataset.balance;
+    const hintEl = document.getElementById("senderBalanceHint");
+
+    if (balance !== undefined) {
+      hintEl.textContent = `Доступно: ${balance} ₽`;
+      hintEl.style.color = "#4ade80";
+    } else {
+      hintEl.textContent = "";
+    }
+  });
 
   function renderCardsVisual(cards) {
     const container = document.getElementById("cardsContainer");
@@ -306,11 +358,11 @@
                 </div>
             `;
 
-      // Action Button (Only Block)
+      // Action Button (Block)
       const btnBlock = document.createElement("button");
       btnBlock.className = "btn-danger btn-small";
       btnBlock.innerText = "Заблокировать карту";
-      btnBlock.onclick = () => fillBlock(card.id);
+      btnBlock.onclick = () => requestBlockDirect(card.id);
 
       wrapper.appendChild(div);
       wrapper.appendChild(btnBlock);
@@ -318,19 +370,8 @@
     });
   }
 
-  function fillBlock(id) {
-    // Since we removed the block panel, we'll just log it or use a simple prompt/alert logic
-    // Or we can temporarily fill the transfer "From" field if we want to reuse logic,
-    // but for now let's just alert that this action requires the panel back or a different approach.
-    // For this specific request, I'll leave the button but it won't have a dedicated panel.
-    // A better UX would be to make the button call the API directly.
-
-    if(confirm(`Вы уверены, что хотите заблокировать карту #${id}?`)) {
-      requestBlockDirect(id);
-    }
-  }
-
   async function requestBlockDirect(id) {
+    if(!confirm(`Вы уверены, что хотите заблокировать карту #${id}?`)) return;
     try {
       const data = await apiPost(`/api/cards/${encodeURIComponent(id)}/block-request`, {});
       setOutput(data || { message: "ok" });
@@ -343,21 +384,27 @@
 
   async function transfer() {
     try {
-      const from = document.getElementById("fromCardNumber").value.trim();
+      // Берем значение из SELECT, а не INPUT
+      const from = document.getElementById("fromCardSelect").value;
       const to = document.getElementById("toCardNumber").value.trim();
       const amount = Number(document.getElementById("transferAmount").value);
 
-      if(!from || !to || !amount) throw new Error("Заполните все поля для перевода");
+      if(!from) throw new Error("Выберите карту отправителя из списка!");
+      if(!to) throw new Error("Введите номер карты получателя!");
+      if(!amount || amount <= 0) throw new Error("Введите корректную сумму!");
 
       const body = { fromCardNumber: from, toCardNumber: to, amount: amount };
       const data = await apiPost("/api/cards/transfer", body);
 
       setOutput(data || { message: "ok" });
       alert("Перевод выполнен успешно!");
-      loadMyCards(); // Refresh balances
 
-      // Clear inputs
+      // Очистка полей
       document.getElementById("transferAmount").value = "";
+      document.getElementById("toCardNumber").value = "";
+
+      // Обновляем балансы
+      loadMyCards();
     } catch (e) {
       setOutput({ error: e.message });
       alert("Ошибка: " + e.message);

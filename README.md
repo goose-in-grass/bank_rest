@@ -1,3 +1,42 @@
+## Запуск проекта
+
+### Требования
+- Java 17+
+- Maven 3.9+
+- Docker + Docker Compose
+
+### Быстрый старт
+
+```bash
+# 1. Запустить PostgreSQL через Docker
+docker-compose up -d
+
+# 2. Запустить приложение
+mvn spring-boot:run
+```
+
+### Доступ
+| Ресурс | URL |
+|--------|-----|
+| API | http://localhost:8080 |
+| Swagger UI | http://localhost:8080/swagger-ui/index.html |
+
+### Учётные данные по умолчанию
+| Роль | Логин | Пароль |
+|------|-------|--------|
+| ADMIN | admin | admin1 |
+
+### Переменные окружения (application.yml)
+```yaml
+spring.datasource.url: jdbc:postgresql://localhost:5432/bank_db
+spring.datasource.username: bankuser
+spring.datasource.password: secret
+app.jwt.secret: my-super-secret-key-minimum-32-characters-long
+app.jwt.expiration-ms: 86400000
+```
+
+---
+
 <h1>🚀 Разработка Системы Управления Банковскими Картами</h1>
 
 <h2>📁 Стартовая структура</h2>
