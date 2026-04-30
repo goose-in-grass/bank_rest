@@ -4,7 +4,6 @@ import com.example.bankcards.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -36,12 +35,10 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/register"
                         ).permitAll()
-                        .requestMatchers("/home", "/home.html", "/admin", "/admin.html").authenticated()
                         .requestMatchers("/api/cards/**", "/api/admin/cards/**").authenticated()
                         .anyRequest().permitAll()
                 )
-                .formLogin(form -> form.disable())
-                .httpBasic(Customizer.withDefaults());
+                .formLogin(form -> form.disable());
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
