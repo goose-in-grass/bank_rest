@@ -3,99 +3,258 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Главная — Bank REST</title>
+  <title>Bank Dashboard | Student Edition</title>
   <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#0f172a; color:#e5e7eb; }
-    .container { max-width:1200px; margin:0 auto; padding:24px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); gap:16px; }
-    .card { background:#111827; border:1px solid #374151; border-radius:16px; padding:20px; }
-    label { display:block; margin:12px 0 6px; color:#9ca3af; font-size:14px; }
-    input, button, select { width:100%; box-sizing:border-box; border-radius:10px; padding:12px; font-size:14px; }
-    input, select { border:1px solid #374151; background:#0b1220; color:#e5e7eb; }
-    button { margin-top:12px; border:none; cursor:pointer; font-weight:700; background:#60a5fa; color:white; }
-    .secondary { background:#374151; }
-    .success { background:#34d399; color:#052e2b; }
-    .danger { background:#f87171; color:#3b0a0a; }
-    .muted { color:#9ca3af; font-size:13px; }
-    pre { margin-top:16px; white-space:pre-wrap; background:#020617; padding:12px; border-radius:12px; border:1px solid #374151; min-height:180px; overflow:auto; }
-    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .topbar { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:20px; }
-    .nav a { color:#93c5fd; text-decoration:none; margin-right:12px; }
-    .cards-list { display:grid; gap:10px; margin-top:12px; }
-    .card-item { border:1px solid #374151; border-radius:12px; padding:12px; background:#0b1220; }
-    .card-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-    .card-actions button { width:auto; padding:8px 12px; margin-top:0; }
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --border-color: rgba(148, 163, 184, 0.1);
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .subtitle { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+    .nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav a:hover { color: var(--accent-blue); }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Cards Styling */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .panel h2 {
+      margin: 0 0 20px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { outline: none; border-color: var(--accent-blue); }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    button:active { transform: scale(0.98); }
+
+    .btn-primary { background: var(--accent-blue); color: white; }
+    .btn-success { background: var(--accent-green); color: white; }
+    .btn-danger { background: var(--accent-red); color: white; }
+    .btn-small { padding: 8px 12px; font-size: 12px; width: auto; }
+
+    button:hover { opacity: 0.9; }
+
+    .row-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Visual Bank Card */
+    .visual-card {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border-radius: 12px;
+      padding: 20px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+
+    .vc-header { display: flex; justify-content: space-between; font-size: 12px; opacity: 0.8; margin-bottom: 20px; }
+    .vc-number { font-family: monospace; font-size: 18px; letter-spacing: 2px; margin-bottom: 16px; }
+    .vc-footer { display: flex; justify-content: space-between; align-items: flex-end; }
+    .vc-holder { font-size: 12px; text-transform: uppercase; }
+    .vc-balance { font-size: 20px; font-weight: 700; }
+
+    .cards-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .console-output {
+      background: #020617;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      color: #a5f3fc;
+      min-height: 150px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .nav { margin-left: -20px; }
+    }
   </style>
 </head>
 <body>
+
 <div class="container">
+  <!-- Header -->
   <div class="topbar">
     <div>
-      <h1>Главная</h1>
-      <div class="muted">Мои карты и пользовательские операции</div>
+      <h1>Bank Dashboard</h1>
+      <div class="subtitle">Управление картами и транзакциями</div>
     </div>
-    <div class="nav">
+    <nav class="nav">
       <a href="/login.html">Вход</a>
       <a href="/register.html">Регистрация</a>
       <a href="/admin.html">Админка</a>
-    </div>
+    </nav>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <h2>Мои карты</h2>
-      <div class="row">
+  <div class="dashboard-grid">
+
+    <!-- LEFT COLUMN: CARDS -->
+    <div class="panel">
+      <h2> Мои карты</h2>
+      <div class="row-inputs" style="max-width: 400px; margin-bottom: 16px;">
         <div>
-          <label>Page</label>
+          <label>Страница</label>
           <input id="cardsPage" type="number" value="0" min="0">
         </div>
         <div>
-          <label>Size</label>
+          <label>Размер</label>
           <input id="cardsSize" type="number" value="10" min="1">
         </div>
       </div>
+      <div style="max-width: 400px;">
+        <label>Фильтр статуса</label>
+        <input id="cardsStatus" type="text" placeholder="ACTIVE, BLOCKED...">
+      </div>
 
-      <label>Status filter</label>
-      <input id="cardsStatus" type="text" placeholder="ACTIVE">
+      <button class="btn-primary" onclick="loadMyCards()" style="max-width: 200px;">Обновить список</button>
 
-      <button onclick="loadMyCards()">Загрузить карты</button>
-      <div id="cardsContainer" class="cards-list"></div>
+      <div id="cardsContainer" class="cards-list-container">
+        <!-- Cards will be injected here -->
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Баланс карты</h2>
-      <label>Card ID</label>
-      <input id="balanceCardId" type="number" placeholder="1">
-      <button onclick="getBalance()">Показать баланс</button>
-    </div>
+    <!-- RIGHT COLUMN: TRANSFER & LOGS -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
 
-    <div class="card">
-      <h2>Запрос блокировки</h2>
-      <label>Card ID</label>
-      <input id="blockCardId" type="number" placeholder="1">
-      <button class="danger" onclick="requestBlock()">Отправить запрос</button>
-    </div>
+      <!-- Transfer Money Panel (Expanded) -->
+      <div class="panel">
+        <h2>💸 Быстрый перевод</h2>
 
-    <div class="card">
-      <h2>Перевод</h2>
-      <label>From card number</label>
-      <input id="fromCardNumber" type="text" placeholder="1234567890123456">
-      <label>To card number</label>
-      <input id="toCardNumber" type="text" placeholder="1234567890123456">
-      <label>Amount</label>
-      <input id="transferAmount" type="number" step="0.01" placeholder="100.00">
-      <button class="success" onclick="transfer()">Перевести</button>
-    </div>
-  </div>
+        <label>Отправитель (Ваша карта)</label>
+        <input id="fromCardNumber" type="text" placeholder="Введите номер карты или ID">
 
-  <div class="card" style="margin-top:16px;">
-    <h2>Ответ сервера</h2>
-    <pre id="output">{}</pre>
+        <label>Получатель</label>
+        <input id="toCardNumber" type="text" placeholder="Номер карты получателя">
+
+        <label>Сумма перевода (₽)</label>
+        <input id="transferAmount" type="number" step="0.01" placeholder="0.00">
+
+        <button class="btn-success" onclick="transfer()">Перевести средства</button>
+      </div>
+
+      <!-- Console Output -->
+      <div class="panel">
+        <h2>🖥️ Лог операций</h2>
+        <pre id="output" class="console-output">// Ожидание действий...</pre>
+      </div>
+    </div>
   </div>
 </div>
 
 <script src="/app.js"></script>
 <script>
+  function setOutput(data) {
+    const el = document.getElementById('output');
+    el.textContent = JSON.stringify(data, null, 2);
+  }
+
   async function loadMyCards() {
     try {
       const page = document.getElementById("cardsPage").value || 0;
@@ -107,64 +266,76 @@
 
       const data = await apiGet(url);
       setOutput(data);
-      renderCards(data.content || []);
+      renderCardsVisual(data.content || []);
     } catch (e) {
       setOutput({ error: e.message });
     }
   }
 
-  function renderCards(cards) {
+  function renderCardsVisual(cards) {
     const container = document.getElementById("cardsContainer");
     container.innerHTML = "";
 
     if (!cards.length) {
-      container.innerHTML = '<div class="muted">Карт нет или API пока не вернул данные.</div>';
+      container.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Карты не найдены.</div>';
       return;
     }
 
     cards.forEach(card => {
+      const wrapper = document.createElement("div");
+
+      // Visual Card
       const div = document.createElement("div");
-      div.className = "card-item";
+      div.className = "visual-card";
+
+      const maskedNum = card.cardNumberMasked || "**** **** **** " + (card.cardNumber ? card.cardNumber.slice(-4) : "0000");
+      const balanceVal = card.balance ?? card.amount ?? 0;
+      const balance = `${balanceVal} ₽`;
+      const holder = card.cardholderName || "HOLDER NAME";
+      const statusColor = card.status === 'ACTIVE' ? '#4ade80' : '#f87171';
+
       div.innerHTML = `
-                <div><strong>#${card.id}</strong> — ${card.cardholderName || ""}</div>
-                <div class="muted">${card.cardNumberMasked || ""}</div>
-                <div>Status: ${card.status || ""}</div>
-                <div>Balance: ${card.balance ?? ""}</div>
-                <div>Owner: ${card.ownerId ?? ""}</div>
-                <div class="card-actions">
-                    <button onclick="fillBalance(${card.id})">Balance</button>
-                    <button class="danger" onclick="fillBlock(${card.id})">Block</button>
+                <div class="vc-header">
+                    <span>BANK REST API</span>
+                    <span style="color:${statusColor}; font-weight:bold;">${card.status || 'UNKNOWN'}</span>
+                </div>
+                <div class="vc-number">${maskedNum}</div>
+                <div class="vc-footer">
+                    <div class="vc-holder">${holder}</div>
+                    <div class="vc-balance">${balance}</div>
                 </div>
             `;
-      container.appendChild(div);
+
+      // Action Button (Only Block)
+      const btnBlock = document.createElement("button");
+      btnBlock.className = "btn-danger btn-small";
+      btnBlock.innerText = "Заблокировать карту";
+      btnBlock.onclick = () => fillBlock(card.id);
+
+      wrapper.appendChild(div);
+      wrapper.appendChild(btnBlock);
+      container.appendChild(wrapper);
     });
   }
 
-  function fillBalance(id) {
-    document.getElementById("balanceCardId").value = id;
-    getBalance();
-  }
-
   function fillBlock(id) {
-    document.getElementById("blockCardId").value = id;
-    requestBlock();
-  }
+    // Since we removed the block panel, we'll just log it or use a simple prompt/alert logic
+    // Or we can temporarily fill the transfer "From" field if we want to reuse logic,
+    // but for now let's just alert that this action requires the panel back or a different approach.
+    // For this specific request, I'll leave the button but it won't have a dedicated panel.
+    // A better UX would be to make the button call the API directly.
 
-  async function getBalance() {
-    try {
-      const cardId = document.getElementById("balanceCardId").value;
-      const data = await apiGet(`/api/cards/${encodeURIComponent(cardId)}/balance`);
-      setOutput(data);
-    } catch (e) {
-      setOutput({ error: e.message });
+    if(confirm(`Вы уверены, что хотите заблокировать карту #${id}?`)) {
+      requestBlockDirect(id);
     }
   }
 
-  async function requestBlock() {
+  async function requestBlockDirect(id) {
     try {
-      const cardId = document.getElementById("blockCardId").value;
-      const data = await apiPost(`/api/cards/${encodeURIComponent(cardId)}/block-request`, {});
+      const data = await apiPost(`/api/cards/${encodeURIComponent(id)}/block-request`, {});
       setOutput(data || { message: "ok" });
+      alert("Карта успешно заблокирована!");
+      loadMyCards();
     } catch (e) {
       setOutput({ error: e.message });
     }
@@ -172,20 +343,30 @@
 
   async function transfer() {
     try {
-      const body = {
-        fromCardNumber: document.getElementById("fromCardNumber").value.trim(),
-        toCardNumber: document.getElementById("toCardNumber").value.trim(),
-        amount: Number(document.getElementById("transferAmount").value)
-      };
+      const from = document.getElementById("fromCardNumber").value.trim();
+      const to = document.getElementById("toCardNumber").value.trim();
+      const amount = Number(document.getElementById("transferAmount").value);
 
+      if(!from || !to || !amount) throw new Error("Заполните все поля для перевода");
+
+      const body = { fromCardNumber: from, toCardNumber: to, amount: amount };
       const data = await apiPost("/api/cards/transfer", body);
+
       setOutput(data || { message: "ok" });
+      alert("Перевод выполнен успешно!");
+      loadMyCards(); // Refresh balances
+
+      // Clear inputs
+      document.getElementById("transferAmount").value = "";
     } catch (e) {
       setOutput({ error: e.message });
+      alert("Ошибка: " + e.message);
     }
   }
 
-  loadMyCards();
+  window.addEventListener('DOMContentLoaded', () => {
+    loadMyCards();
+  });
 </script>
 </body>
 </html>

@@ -43,7 +43,7 @@
 
         <!-- Lombok — генерация boilerplate (@Getter, @Builder и т.д.) -->
         <!-- Версией управляет Spring Boot parent, но явно фиксируем для mapstruct-processor -->
-        <lombok.version>1.18.34</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
 
         <!-- SpringDoc OpenAPI — Swagger UI -->
         <springdoc.version>2.6.0</springdoc.version>
@@ -245,16 +245,20 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${java.version}</release>
                     <annotationProcessorPaths>
-                        <!-- 1. Lombok ПЕРВЫМ — генерирует геттеры/сеттеры -->
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                             <version>${lombok.version}</version>
                         </path>
-                        <!-- 2. MapStruct ВТОРЫМ — использует геттеры от Lombok -->
+
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </path>
+
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>

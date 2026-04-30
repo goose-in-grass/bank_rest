@@ -5,6 +5,8 @@ import com.example.bankcards.dto.Responses.CardResponse;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.repository.Interfaces.UserRepository;
 import com.example.bankcards.service.CardService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +23,7 @@ public class CardController {
     private final CardService cardService;
     private final UserRepository userRepository;
 
+    @Operation(summary = "Получить список своих карт ")
     @GetMapping
     public ResponseEntity<Page<CardResponse>> getMyCards(
             @AuthenticationPrincipal UserDetails user,
@@ -32,6 +35,7 @@ public class CardController {
         return ResponseEntity.ok(cardService.getMyCards(userId, PageRequest.of(page, size), status));
     }
 
+    @Operation(summary = "Получить баланс карты")
     @GetMapping("/{cardId}/balance")
     public ResponseEntity<?> getBalance(
             @AuthenticationPrincipal UserDetails user,
@@ -41,6 +45,7 @@ public class CardController {
         return ResponseEntity.ok(cardService.getBalance(cardId, userId));
     }
 
+    @Operation(summary = "Запрос на блокировку карты")
     @PostMapping("/{cardId}/block-request")
     public ResponseEntity<Void> requestBlock(
             @AuthenticationPrincipal UserDetails user,
@@ -51,6 +56,7 @@ public class CardController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Перевод между картами")
     @PostMapping("/transfer")
     public ResponseEntity<Void> transfer(
             @AuthenticationPrincipal UserDetails user,
