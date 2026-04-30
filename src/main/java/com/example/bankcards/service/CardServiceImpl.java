@@ -6,6 +6,7 @@ import com.example.bankcards.dto.Responses.CardResponse;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.Enums.CardStatus;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.mapper.CardMapper;
 import com.example.bankcards.repository.Interfaces.CardRepository;
 import com.example.bankcards.repository.Interfaces.UserRepository;
 import jakarta.transaction.Transactional;
@@ -27,6 +28,7 @@ public class CardServiceImpl implements CardService {
 
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
+    private final CardMapper cardMapper;
 
     @Override
     public Page<CardResponse> getMyCards(Long userId, Pageable pageable, String status) {

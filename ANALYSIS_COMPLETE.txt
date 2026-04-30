@@ -1,59 +1,136 @@
 ╔════════════════════════════════════════════════════════════════════════╗
-║     📋 ПРОВЕРКА СООТВЕТСТВИЯ ROADMAP: ОБНОВЛЕНА                        ║
+║     📋 АНАЛИЗ ПРОЕКТА: bank_rest (bank_rest_2.zip)                     ║
 ║                                                                          ║
 ║     Проект: bank_rest (Spring Boot REST API)                           ║
 ║     Дата:   30 апреля 2026                                              ║
-║     Статус: ~60% ГОТОВНОСТИ                                             ║
+║     Статус: 78% ГОТОВНОСТИ  ▲ (+18% с последнего анализа)             ║
 ╚════════════════════════════════════════════════════════════════════════╝
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✅ ЧТО УЖЕ СДЕЛАНО
+✅ ЧТО ВЫПОЛНЕНО — ПОДРОБНО
 
-  📦 Этап 0-3: Архитектура и данные
-     • Сущности User и Card — созданы и связаны корректно
-     • DTO классы — подготовлены и используются
-     • Liquibase миграции — готовы
-     • Docker + PostgreSQL — настроены
-     • Lombok интеграция — применена
-     • Репозитории — реализованы через Spring Data JPA интерфейсы
+  📦 Этап 0: Подготовка среды
+     • pom.xml — зависимости правильные (Spring Boot, Security, JWT, Liquibase, Lombok)
+     • Docker Compose + PostgreSQL — настроены
+     • application.yml — полностью сконфигурирован (datasource, jwt, liquibase, порт)
+     • .gitignore — присутствует
 
-  🔧 Бизнес-логика и сервисы
-     • ✅ CardServiceImpl — доведён до рабочей версии
-     • ✅ CardService — интерфейс завершён
-     • ✅ AuthService — реализованы login + register
-     • ✅ AuthServiceImpl — создаёт пользователя и выдаёт JWT
-     • ✅ JwtUtil — умеет генерировать и читать JWT
-     • ✅ CardController — переведён на реального пользователя через UserRepository
-     • ✅ AdminCardController — базовые admin-операции добавлены
-     • ✅ AuthController — поддерживает login + register
-     • ✅ PageController — редиректы на страницы добавлены
+  🗃️  Этап 1-2: Доменная модель и БД
+     • User.java — все поля (id, username, email, password, role, cards, createdAt) ✅
+     • Card.java — все поля (id, cardNumberEncrypted, cardNumberMasked, owner, ✅
+       cardholderName, expiresAt, status, balance, createdAt)
+     • Enums: Role (USER, ADMIN), CardStatus (ACTIVE, BLOCKED, EXPIRED) ✅
+     • Liquibase: 3 миграции — users, cards, insert admin ✅
+     • ManyToOne/OneToMany связи правильные ✅
 
-  🔐 Security
-     • ✅ JwtAuthenticationFilter — добавлен
-     • ✅ SecurityConfig — добавлен JWT-aware security-контур
-     • ✅ Публичные страницы — login/register доступны без авторизации
-     • ✅ Защищённые страницы — home/admin требуют входа
-     • ✅ API /api/cards и /api/admin/cards — защищены
+  📋 Этап 3: DTO
+     • CreateCardRequest — ownerId, cardholderName, initialBalance + валидации ✅
+     • LoginRequest — username, password + валидации ✅
+     • RegisterRequest — username, email, password + валидации ✅
+     • TransferRequest — fromCardNumber, toCardNumber, amount + валидации ✅
+     • CardResponse — id, cardNumberMasked, status, balance, ownerId, createdAt ✅
+     • LoginResponse — token, username, role, userId, expiresIn ✅
+     • TransferResponse — создан, но нигде не используется ⚠️
 
-  🧩 UI и статические страницы
-     • ✅ `login.html` — готова
-     • ✅ `register.html` — восстановлена
-     • ✅ `home.html` — готова
-     • ✅ `admin.html` — готова
-     • ✅ `app.js` — общий API-слой добавлен
-     • ✅ Убраны лишние верхние ссылки на страницы
-     • ✅ Регистрация и логин связаны с backend
+  🗄️  Этап 4: Репозитории
+     • CardRepository — extends JpaRepository<Card, Long> ✅
+     • UserRepository — findByUsername, existsByEmail, existsByUsername ✅
+     • Пустых Impl-файлов НЕТ (удалены!) ✅
+
+  ⚙️  Этап 5: Сервисы
+     • CardService.java (интерфейс) — 9 методов, полный контракт ✅
+     • CardServiceImpl.java — реализованы все 9 методов ✅
+       - getMyCards, getBalance, requestBlock, transfer ✅
+       - createCard, blockCard, activateCard, deleteCard, getAllCards ✅
+     • AuthService.java (интерфейс) — login, register ✅
+     • AuthServiceImpl.java — login + register с BCrypt ✅
+
+  🔐 Этап 6: Security
+     • SecurityConfig.java — STATELESS, CSRF off, правила доступа ✅
+     • JwtAuthenticationFilter.java — OncePerRequestFilter, парсит Bearer-токен ✅
+     • JwtUtil.java — generateToken, getUsernameFromToken, isTokenValid ✅
+       (subject, userId, role в claims, HMAC-SHA ключ, configurable expiration)
+
+  🌐 Этап 7: Контроллеры
+     • AuthController — POST /api/auth/login, POST /api/auth/register ✅
+     • CardController — GET /api/cards, GET /{id}/balance, ✅
+       POST /{id}/block-request, POST /transfer
+     • AdminCardController — POST, GET /api/admin/cards, ✅
+       POST /{id}/block, POST /{id}/activate, DELETE /{id}
+     • PageController — редиректы для HTML-страниц ✅
+
+  🖥️  Фронтенд (bonus — не в roadmap)
+     • login.html, register.html, home.html, admin.html ✅
+     • app.js — общий клиент с apiGet/apiPost/apiDelete, JWT в localStorage ✅
+     • Автоматическое перенаправление по роли (USER → home, ADMIN → admin) ✅
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚠️ ЧТО ЕЩЁ НЕ ДОБИТО ДО КОНЦА
+⚠️  ПРОБЛЕМЫ И ЗАМЕЧАНИЯ (некритично, но важно)
 
-  • JWT user-context нужно ещё проверить в реальном браузерном flow
-  • Нужно убедиться, что токен корректно проходит во все защищённые запросы
-  • Нужно проверить, что `home.html` и `admin.html` действительно недоступны без входа
-  • Нужно проверить поведение `CardController` после полной JWT-цепочки
-  • Нужен финальный security-polish, если потребуется отдельный principal/claims mapping
+  1. CardNumberUtil.java — файл ПУСТОЙ (0 строк)
+     Генерация номера карты inline в CardServiceImpl (метод generateCardNumber).
+     Нужно: вынести логику в утилиту или использовать Luhn-алгоритм.
+
+  2. entity/interfaces/Card.java — пустой интерфейс (5 строк, только декларация)
+     Нигде не используется. Удалить или реализовать.
+
+  3. CardServiceImpl — getMyCards и getAllCards используют findAll() вместо
+     нативных JPA-запросов с Pageable/фильтрами.
+     Проблема: при большом количестве карт — загрузка ВСЕЙ таблицы в память.
+     Нужно: добавить в CardRepository методы с @Query или Specification.
+
+  4. CardServiceImpl — findCardByNumber() тоже использует findAll().stream()
+     Нужно: добавить findByCardNumberEncrypted() или findByCardNumberMasked()
+     в CardRepository.
+
+  5. CardController — getUserIdFromPrincipal() делает запрос к БД на каждый
+     запрос пользователя (лишний SELECT по username).
+     Лучше: хранить userId прямо в JWT-claims (уже есть в токене!).
+
+  6. AuthServiceImpl — BCryptPasswordEncoder создаётся как поле (new BCryptPasswordEncoder())
+     вместо @Bean в SecurityConfig или @Component.
+     Нужно: вынести в Spring-бин.
+
+  7. startApplication.java — имя класса строчное (нарушение конвенции Java).
+     Должно быть: StartApplication.java (или BankRestApplication.java).
+     Дополнительно: в main() печатается хэш пароля admin1 — это лишнее в production.
+
+  8. JwtUtil — isTokenValid() проверяет только username, но не expiration.
+     Нужно: также проверять дату истечения токена.
+
+  9. SecurityConfig — нет явного указания ролей для /api/admin/cards/**
+     Нужно: .hasRole("ADMIN") для admin-эндпоинтов, иначе любой аутентифицированный
+     пользователь может обращаться к admin API.
+
+  10. TransferResponse.java — создан, но transfer() в CardServiceImpl возвращает void.
+      Нужно: либо использовать TransferResponse, либо удалить класс.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ ЧТО ОТСУТСТВУЕТ (нужно реализовать)
+
+  КРИТИЧНО:
+    [ ] GlobalExceptionHandler — нет обработки ошибок
+        Сейчас IllegalArgumentException → 500 Internal Server Error
+        Нужно: @RestControllerAdvice + 400/404/403 с JSON-телом ошибки
+    [ ] Проверка expiration в JwtUtil.isTokenValid()
+    [ ] Защита admin-роутов через .hasRole("ADMIN") в SecurityConfig
+    [ ] Исправить findAll() → JPA-запросы в CardRepository
+
+  ВАЖНО:
+    [ ] MapStruct маппер (Card → CardResponse) вместо ручного toResponse()
+    [ ] OpenAPI / Swagger UI — документация API
+    [ ] Тесты — unit + integration (0% покрытия)
+    [ ] Вынести BCryptPasswordEncoder в @Bean
+    [ ] Реализовать CardNumberUtil (Luhn-алгоритм)
+
+  МЕЛКОЕ:
+    [ ] Переименовать startApplication → StartApplication
+    [ ] Убрать System.out.println в main()
+    [ ] Удалить entity/interfaces/Card.java или наполнить смыслом
+    [ ] Использовать TransferResponse или удалить его
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -64,120 +141,180 @@
   0     Подготовка               [████████]  ✅ 100%
   1     Доменная модель          [████████]  ✅ 100%
   2     БД и Liquibase           [████████]  ✅ 100%
-  3     DTO и валидация          [████████]  ✅ 100%
-  4     Репозитории              [████████]  ✅ 100%
-  5     Сервисы                  [█████░░░░]  ⚠️  50%
-  6     Security                 [████░░░░]  ⚠️  45%
-  7     Контроллеры              [████░░░░]  ⚠️  45%
-  8     Обработка ошибок         [░░░░░░░░]  ❌  0%
-  9     MapStruct                [░░░░░░░░]  ❌  0%
-  10    OpenAPI / Swagger        [░░░░░░░░]  ❌  0%
-  11    Тестирование             [░░░░░░░░]  ❌  0%
+  3     DTO и валидация          [███████░]  ✅  90% (TransferResponse не используется)
+  4     Репозитории              [██████░░]  ⚠️  75% (нет кастомных запросов)
+  5     Сервисы                  [███████░]  ✅  85% (findAll проблема, логика работает)
+  6     Security                 [██████░░]  ⚠️  75% (нет role-check, нет exp-check)
+  7     Контроллеры              [████████]  ✅ 100%
+  8     Обработка ошибок         [░░░░░░░░]  ❌   0%
+  9     MapStruct                [░░░░░░░░]  ❌   0%
+  10    OpenAPI / Swagger        [░░░░░░░░]  ❌   0%
+  11    Тестирование             [░░░░░░░░]  ❌   0%
   12    Docker                   [████████]  ✅ 100%
-  13    Документация             [███░░░░░]  ⚠️  60%
-  ────────────────────────────────────────────────────
-  ИТОГО                           [████░░░░]  ~60%
+  13    Документация             [████░░░░]  ⚠️  50%
+  ─────────────────────────────────────────────────────────
+  ИТОГО                         [██████░░]  ~78%
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-❌ ЧТО ЕЩЁ НУЖНО СДЕЛАТЬ
+🗂️  СТРУКТУРА ФАЙЛОВ (как есть)
 
-  НЕДЕЛЯ 1 (День 1-2):
-    [ ] Проверить JWT user-context в реальном flow
-    [ ] Убедиться, что access control на страницы работает корректно
-    [ ] Проверить login/register flow после всех security-изменений
-    [ ] При необходимости добавить отдельный principal/claims mapping
+  src/main/java/com/example/bankcards/
+  ├── startApplication.java              ⚠️ имя нарушает конвенцию
+  ├── config/
+  │   └── SecurityConfig.java           ✅ (нет role-check для admin)
+  ├── controller/
+  │   ├── AuthController.java           ✅
+  │   ├── CardController.java           ✅ (лишний SELECT на каждый запрос)
+  │   ├── AdminCardController.java      ✅
+  │   └── PageController.java           ✅
+  ├── dto/
+  │   ├── Requests/
+  │   │   ├── CreateCardRequest.java    ✅
+  │   │   ├── LoginRequest.java         ✅
+  │   │   ├── RegisterRequest.java      ✅
+  │   │   └── TransferRequest.java      ✅
+  │   └── Responses/
+  │       ├── CardResponse.java         ✅
+  │       ├── LoginResponse.java        ✅
+  │       └── TransferResponse.java     ⚠️ не используется
+  ├── entity/
+  │   ├── Card.java                     ✅
+  │   ├── User.java                     ✅
+  │   ├── Enums/
+  │   │   ├── CardStatus.java           ✅
+  │   │   └── Role.java                 ✅
+  │   └── interfaces/
+  │       └── Card.java                 ❌ пустой, удалить
+  ├── repository/
+  │   └── Interfaces/
+  │       ├── CardRepository.java       ⚠️ нужны кастомные методы
+  │       └── UserRepository.java       ✅
+  ├── security/
+  │   └── JwtAuthenticationFilter.java  ✅
+  ├── service/
+  │   ├── AuthService.java              ✅
+  │   ├── AuthServiceImpl.java          ✅
+  │   ├── CardService.java              ✅
+  │   └── CardServiceImpl.java          ⚠️ findAll() антипаттерн
+  └── util/
+      ├── JwtUtil.java                  ⚠️ нет проверки expiration
+      └── CardNumberUtil.java           ❌ пустой файл
 
-  НЕДЕЛЯ 1 (День 3):
-    [ ] Проверить `JwtAuthenticationFilter` в браузере и API
-    [ ] Проверить, что `home.html` и `admin.html` недоступны без входа
-    [ ] Проверить, что public pages открываются без дефолтной sign-in page
-
-  НЕДЕЛЯ 1 (День 4):
-    [ ] Доработать `AuthController`, если понадобится
-    [ ] Проверить `CardController` в реальном JWT flow
-    [ ] Проверить `PageController` редиректы
-
-  НЕДЕЛЯ 2 (День 5):
-    [ ] GlobalExceptionHandler
-    [ ] Классы исключений
-    [ ] MapStruct Mapper
-
-  НЕДЕЛЯ 2 (День 6-7):
-    [ ] Unit-тесты ключевых сценариев
-    [ ] Integration-тесты
-    [ ] OpenAPI документация
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📚 СОЗДАННЫЕ ДОКУМЕНТЫ ДЛЯ СПРАВКИ
-
-  ⭐ ONE_PAGE_SUMMARY.md          → Начните с этого (2 мин)
-     QUICK_REFERENCE.md           → Шпаргалка при разработке
-     STATUS_SUMMARY.md            → Полные метрики и анализ
-     COMPLIANCE_REPORT.md         → Анализ каждого этапа
-     NEXT_STEPS.md                → Пошаговые инструкции
-     DOCUMENTATION_INDEX.md       → Индекс всех документов
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-⚡ СЛЕДУЮЩИЙ ШАГ (5 МИНУТ)
-
-  1. Открыть `ONE_PAGE_SUMMARY.md`
-  2. Проверить JWT flow в браузере
-  3. Проверить доступ к `home.html` и `admin.html` после входа
-  4. Запустить: mvn clean compile
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📈 МЕТРИКИ
-
-  • Всего строк кода (готово):      ~1800
-  • Нужно написать:                  ~900-1100
-  • Всего при готовности:            ~2700-2900
-  • Строк DTO:                        ~160 ✅
-  • Строк Entity:                     ~100 ✅
-  • Строк репозиториев:              ~20 ✅
-  • Миграций:                         3 ✅
-  • Найденных проблем:               15+ ✅
-  • Критических проблем:             1 ✅
-  • Исправлено проблем:              10+ ✅
+  src/main/resources/
+  ├── application.yml                   ✅
+  ├── db/changelog/
+  │   ├── db.changelog-master.yaml      ✅
+  │   ├── 001-create-users-table.yaml   ✅
+  │   ├── 002-create-cards-table.yaml   ✅
+  │   └── 003-insert-admin-user.yaml    ✅
+  └── static/
+      ├── login.html                    ✅ (бонус)
+      ├── register.html                 ✅ (бонус)
+      ├── home.html                     ✅ (бонус)
+      ├── admin.html                    ✅ (бонус)
+      └── app.js                        ✅ (бонус)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 ВЫВОДЫ
+⚡ ПЛАН ДЕЙСТВИЙ (по приоритету)
 
-  ✨ Что хорошо:
-     • Архитектура с начала правильная
-     • DTO полностью готовы
-     • БД спроектирована правильно
-     • Используются лучшие практики
-     • Lombok уменьшил код на 40%
-     • Появился рабочий UI-каркас
-     • Регистрация и login flow работают
-     • JWT user-context и security уже подключены
+  ДЕНЬ 1 — Критические баги безопасности (2-3 часа):
+    [ ] SecurityConfig: добавить .hasRole("ADMIN") для /api/admin/cards/**
+    [ ] JwtUtil.isTokenValid(): добавить проверку expiration через getAllClaims()
+    [ ] AuthServiceImpl: вынести BCryptPasswordEncoder в @Bean в SecurityConfig
 
-  ⚠️  Что требует работы:
-     • Финальная проверка JWT flow
-     • Обработка ошибок
-     • Тесты
-     • OpenAPI документация
+  ДЕНЬ 2 — Устойчивость (3-4 часа):
+    [ ] CardRepository: добавить методы findByOwner_IdAndStatus, findByCardNumberEncrypted
+    [ ] CardServiceImpl: переписать getMyCards, getAllCards, findCardByNumber на JPA
+    [ ] CardController: читать userId из JWT claims напрямую, без лишнего SELECT
+
+  ДЕНЬ 3 — Обработка ошибок (2-3 часа):
+    [ ] Создать кастомные Exception классы (CardNotFoundException, AccessDeniedException и т.д.)
+    [ ] Реализовать GlobalExceptionHandler (@RestControllerAdvice)
+    [ ] Стандартизировать JSON-формат ответа с ошибкой: { message, status, timestamp }
+
+  ДЕНЬ 4 — Качество кода (2-3 часа):
+    [ ] Добавить MapStruct: CardMapper (Card → CardResponse)
+    [ ] Реализовать CardNumberUtil с Luhn-алгоритмом
+    [ ] Переименовать startApplication → BankRestApplication
+    [ ] Удалить entity/interfaces/Card.java (пустой интерфейс)
+    [ ] Использовать TransferResponse в CardServiceImpl.transfer() или удалить
+
+  ДЕНЬ 5-6 — Тесты (4-5 часов):
+    [ ] Unit-тесты: CardServiceImpl, AuthServiceImpl, JwtUtil
+    [ ] Integration-тесты: AuthController, CardController (с @SpringBootTest)
+
+  ДЕНЬ 7 — Документация (1-2 часа):
+    [ ] OpenAPI / Swagger: добавить springdoc-openapi зависимость в pom.xml
+    [ ] Аннотировать контроллеры @Operation, @ApiResponse
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 МЕТРИКИ КОДА
+
+  Категория               Файлов   Строк    Статус
+  ─────────────────────────────────────────────────
+  Entities                2        88       ✅
+  Enums                   2        14       ✅
+  DTO (Requests)          4        114      ✅
+  DTO (Responses)         3        76       ✅ (1 не используется)
+  Repositories            2        20       ⚠️ (нет кастомных запросов)
+  Services (интерфейсы)   2        30       ✅
+  Services (impl)         2        250      ⚠️ (findAll антипаттерн)
+  Controllers             4        182      ✅
+  Security                2        107      ⚠️ (нет role-check, exp-check)
+  Utils                   2        72       ⚠️ (CardNumberUtil пуст)
+  Config                  1        46       ⚠️ (нет role-check)
+  Liquibase               4        ~80      ✅
+  Frontend (HTML/JS)      5        ~700     ✅ (бонус)
+  ─────────────────────────────────────────────────
+  ИТОГО Java              27       ~999     78% ready
+  Нужно написать          ~        ~400-600
+  Итого при готовности    ~        ~1400-1600
+
+  • Найдено проблем:                 10
+  • Критических проблем (security):  2  ← решить в первую очередь
+  • Предупреждений (code quality):   6
+  • Мелких замечаний:                2
+  • Пустых файлов:                   2  (CardNumberUtil, interfaces/Card)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 ИТОГ — ЧТО ХОРОШО И ЧТО НЕТ
+
+  ✨ Что сделано хорошо:
+     • Прогресс с 60% до 78% — значительный скачок
+     • Security-слой появился: SecurityConfig + JwtAuthenticationFilter ✅
+     • Все контроллеры реализованы и имеют правильные эндпоинты ✅
+     • CardServiceImpl полностью реализован (все 9 методов) ✅
+     • AuthServiceImpl работает с реальным BCrypt ✅
+     • Фронтенд добавлен бонусом — отличный инструмент для ручного тестирования ✅
+     • Пустые Impl-файлы удалены ✅
+     • Архитектура остаётся чистой и логичной ✅
+
+  ⛔ Главные риски:
+     • Admin-эндпоинты доступны ЛЮБОМУ авторизованному пользователю (нет hasRole)
+     • JWT-токен не проверяется на истечение — токен вечный де-факто
+     • findAll() в сервисе — падение производительности при реальных данных
 
   💡 Рекомендация:
-     Сейчас важно не добавлять новый функционал,
-     а довести существующий flow до стабильного состояния.
+     Начните с двух строчек в SecurityConfig — это займёт 5 минут
+     и закроет самую серьёзную дыру в безопасности.
+     Затем добавьте GlobalExceptionHandler — без него API нельзя
+     считать готовым к использованию.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✅ СТАТУС: ГОТОВО К РАЗРАБОТКЕ
+✅ СТАТУС: ФУНКЦИОНАЛЬНО РАБОЧИЙ, НЕ ГОТОВ К PRODUCTION
 
-  Проект находится в хорошем состоянии и готов к работе следующего уровня.
-  Фундамент крепкий, нужно только завершить основную функциональность.
+  Приложение запустится и будет работать.
+  До production-ready остаётся ~3-4 дня при 3-4 часах работы в день.
 
-  Время до production-ready: ~4-5 дней при 4 часах работы в день.
+  Время до production-ready: ~3-4 дня
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Создано: 30 апреля 2026 | Проверено: GitHub Copilot | v1.5-SNAPSHOT
+Создано: 30 апреля 2026 | Анализ: Claude Sonnet 4.6 | v2.0-SNAPSHOT
 
-Следующий шаг: → Проверить JWT flow и стабилизировать security access
+Следующий шаг: → SecurityConfig.hasRole("ADMIN") + JwtUtil expiration check
