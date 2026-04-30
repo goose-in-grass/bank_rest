@@ -1,6 +1,6 @@
 package com.example.bankcards.controller;
 
-import com.example.bankcards.dto.CardResponse;
+import com.example.bankcards.dto.Responses.CardResponse;
 import com.example.bankcards.service.CardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class CardController {      // public класс!
 
     private final CardService cardService;
+
+
 
     @GetMapping
     public ResponseEntity<Page<CardResponse>> getMyCards(

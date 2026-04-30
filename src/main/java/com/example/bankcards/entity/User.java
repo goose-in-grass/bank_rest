@@ -1,7 +1,7 @@
 package com.example.bankcards.entity;
 
 
-import com.example.bankcards.entity.interfaces.Card;
+import com.example.bankcards.entity.Enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,9 +14,9 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @Data @NoArgsConstructor @AllArgsConstructor
-public class User {          // просто User, без Impl
+public class User {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;         // Long, не Integer
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -31,10 +31,10 @@ public class User {          // просто User, без Impl
     @Column(nullable = false)
     private Role role;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-    private List<CardImpl> cards; // Card — конкретный Entity класс
+    @OneToMany(mappedBy = "owner")
+    private List<Card> cards;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-    // Никаких методов-действий!
+
 }

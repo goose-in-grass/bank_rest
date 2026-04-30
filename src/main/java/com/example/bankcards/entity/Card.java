@@ -1,6 +1,6 @@
 package com.example.bankcards.entity;
 
-import com.example.bankcards.entity.interfaces.Card;
+import com.example.bankcards.entity.Enums.CardStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class CardImpl implements Card {
+public class Card {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -29,6 +29,7 @@ public class CardImpl implements Card {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
+    //Использовать в будущем, если понадобится сохранять имя держателя карты
     @Column(name = "cardholder_name", nullable = false)
     private String cardholderName;
 
@@ -37,7 +38,7 @@ public class CardImpl implements Card {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CardStatus status;        // enum: ACTIVE, BLOCKED, EXPIRED
+    private CardStatus status;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal balance;

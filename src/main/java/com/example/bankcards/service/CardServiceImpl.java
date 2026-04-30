@@ -1,9 +1,10 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.dto.CardResponse;
-import com.example.bankcards.dto.CreateCardRequest;
-import com.example.bankcards.dto.TransferRequest;
+import com.example.bankcards.dto.Responses.CardResponse;
+import com.example.bankcards.dto.Requests.CreateCardRequest;
+import com.example.bankcards.dto.Requests.TransferRequest;
 import com.example.bankcards.repository.Interfaces.CardRepository;
+import com.example.bankcards.repository.Interfaces.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,15 @@ import java.math.BigDecimal;
 public class CardServiceImpl implements CardService {
 
     private final CardRepository cardRepository;
+    private final UserRepository userRepository;
 
     @Override
     public Page<CardResponse> getMyCards(Long userId, Pageable p, String status) {
+        return null;
+    }
+
+    @Override
+    public Page<CardResponse> getMyCards(Long userId, org.springframework.data.domain.Pageable p, String status) {
         return null;
     }
 
@@ -55,6 +62,11 @@ public class CardServiceImpl implements CardService {
     @Override
     public void deleteCard(Long cardId) {
 
+    }
+
+    @Override
+    public Page<CardResponse> getAllCards(org.springframework.data.domain.Pageable p, String status) {
+        return null;
     }
 
     @Override

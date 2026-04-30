@@ -1,15 +1,16 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.dto.CardResponse;
-import com.example.bankcards.dto.CreateCardRequest;
-import com.example.bankcards.dto.TransferRequest;
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
+import com.example.bankcards.dto.Responses.CardResponse;
+import com.example.bankcards.dto.Requests.CreateCardRequest;
+import com.example.bankcards.dto.Requests.TransferRequest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.awt.print.Pageable;
 import java.math.BigDecimal;
 
 public interface CardService {
+    Page<CardResponse> getMyCards(Long userId, java.awt.print.Pageable p, String status);
+
     // USER
     Page<CardResponse> getMyCards(Long userId, Pageable p, String status);
     BigDecimal getBalance(Long cardId, Long userId);
@@ -22,4 +23,6 @@ public interface CardService {
     void activateCard(Long cardId);
     void deleteCard(Long cardId);
     Page<CardResponse> getAllCards(Pageable p, String status);
+
+    Page<CardResponse> getAllCards(java.awt.print.Pageable p, String status);
 }
