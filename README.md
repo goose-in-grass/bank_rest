@@ -1,144 +1,173 @@
-## Запуск проекта
+# Bank Card Management — REST API
 
-### Требования
-- Java 17+
-- Maven 3.9+
-- Docker + Docker Compose
+Backend-приложение на Spring Boot для управления банковскими картами с JWT-аутентификацией, ролевым доступом и Swagger-документацией.
 
-### Быстрый старт
+---
+
+## Быстрый запуск
+
+Требуется только **Docker** и **Docker Compose**.
 
 ```bash
-# 1. Запустить PostgreSQL через Docker
-docker-compose up -d
-
-# 2. Запустить приложение
-mvn spring-boot:run
+docker-compose up --build
 ```
 
-### Доступ
+Приложение поднимется на [http://localhost:8080](http://localhost:8080).  
+PostgreSQL запустится автоматически, Liquibase применит все миграции.
+
+> При первом запуске Maven скачает зависимости — это займёт 2–3 минуты.  
+> Последующие запуски используют Docker layer cache и проходят быстрее.
+
+---
+
+## Доступ после запуска
+
 | Ресурс | URL |
 |--------|-----|
-| API | http://localhost:8080 |
+| Главная страница | http://localhost:8080 |
+| Панель администратора | http://localhost:8080/admin.html |
 | Swagger UI | http://localhost:8080/swagger-ui/index.html |
+| OpenAPI JSON | http://localhost:8080/v3/api-docs |
 
 ### Учётные данные по умолчанию
+
 | Роль | Логин | Пароль |
 |------|-------|--------|
 | ADMIN | admin | admin1 |
 
-### Переменные окружения (application.yml)
-```yaml
-spring.datasource.url: jdbc:postgresql://localhost:5432/bank_db
-spring.datasource.username: bankuser
-spring.datasource.password: secret
-app.jwt.secret: my-super-secret-key-minimum-32-characters-long
-app.jwt.expiration-ms: 86400000
+Пользователей можно регистрировать через форму на главной странице.
+
+---
+
+## Стек технологий
+
+| Технология | Назначение |
+|-----------|-----------|
+| Java 17 | Язык |
+| Spring Boot 3.3.5 | Фреймворк |
+| Spring Security 6 + JWT (JJWT 0.12.6) | Аутентификация и авторизация |
+| Spring Data JPA + Hibernate | ORM |
+| PostgreSQL 16 | База данных |
+| Liquibase | Миграции схемы БД |
+| MapStruct | Маппинг Entity ↔ DTO |
+| SpringDoc OpenAPI 2.6 | Swagger UI |
+| Docker + Docker Compose | Контейнеризация |
+| JUnit 5 + Mockito + MockMvc | Тесты |
+
+---
+
+## Архитектура
+
+```
+src/main/java/com/example/bankcards/
+├── config/          # SecurityConfig, OpenApiConfig
+├── controller/      # REST-контроллеры
+│   ├── AdminCardController   # /api/admin/cards/**
+│   ├── CardController        # /api/cards/**
+│   ├── AuthController        # /api/auth/**
+│   └── PageController        # статические страницы
+├── dto/
+│   ├── Requests/    # LoginRequest, RegisterRequest, TransferRequest, ...
+│   └── Responses/   # CardResponse, LoginResponse, TransferResponse, ...
+├── entity/          # User, Card, CardRequest + Enums
+├── exception/       # глобальный обработчик ошибок
+├── mapper/          # CardMapper (MapStruct)
+├── repository/      # UserRepository, CardRepository, CardRequestRepository
+├── security/        # JwtUtil, JwtAuthenticationFilter
+└── service/         # AuthServiceImpl, CardServiceImpl
+```
+
+Миграции БД: `src/main/resources/db/changelog/`
+
+---
+
+## API
+
+### Аутентификация — `/api/auth`
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| POST | `/api/auth/login` | Вход, возвращает JWT |
+| POST | `/api/auth/register` | Регистрация нового пользователя |
+
+### Карты пользователя — `/api/cards` (роль USER)
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| GET | `/api/cards` | Список своих карт (фильтр по статусу, пагинация) |
+| GET | `/api/cards/{id}/balance` | Баланс карты |
+| POST | `/api/cards/{id}/request-block` | Запрос на блокировку |
+| POST | `/api/cards/transfer` | Перевод между своими картами по ID |
+| POST | `/api/cards/transfer/phone` | Перевод по номеру телефона получателя |
+| POST | `/api/cards/request` | Запрос на выпуск новой карты |
+
+### Администрирование — `/api/admin` (роль ADMIN)
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| GET | `/api/admin/users` | Список всех пользователей |
+| DELETE | `/api/admin/users/{id}` | Удалить пользователя |
+| GET | `/api/admin/cards` | Все карты (фильтр по статусу и пользователю) |
+| POST | `/api/admin/cards` | Создать карту |
+| POST | `/api/admin/cards/{id}/block` | Заблокировать карту |
+| POST | `/api/admin/cards/{id}/activate` | Активировать карту |
+| DELETE | `/api/admin/cards/{id}` | Удалить карту |
+| GET | `/api/admin/cards/requests` | Заявки на выпуск карт |
+| POST | `/api/admin/cards/requests/{id}/approve` | Одобрить заявку |
+| POST | `/api/admin/cards/requests/{id}/reject` | Отклонить заявку |
+
+---
+
+## Безопасность
+
+- JWT-токен передаётся в заголовке `Authorization: Bearer <token>`
+- Номер карты хранится в зашифрованном виде, отображается маской: `**** **** **** 1234`
+- Пользователь имеет доступ только к своим картам — проверка по `userId` из токена
+- Пароли хранятся в BCrypt-хэше
+
+---
+
+## Тесты
+
+```bash
+mvn test
+```
+
+Покрыты юнит-тестами:
+- `CardServiceImplTest` — бизнес-логика карт и переводов
+- `AuthServiceImplTest` — регистрация и аутентификация
+- `CardControllerTest`, `AdminCardControllerTest`, `AuthControllerTest`, `PageControllerTest` — REST-слой через MockMvc
+
+Тесты используют H2 in-memory БД — PostgreSQL для их запуска не нужен.
+
+---
+
+## Локальный запуск без Docker
+
+Требуется: Java 17+, Maven 3.9+, PostgreSQL 16.
+
+1. Создать БД и пользователя:
+```sql
+CREATE DATABASE bank_db;
+CREATE USER bankuser WITH PASSWORD 'secret';
+GRANT ALL PRIVILEGES ON DATABASE bank_db TO bankuser;
+```
+
+2. Запустить приложение:
+```bash
+mvn spring-boot:run
 ```
 
 ---
 
-<h1>🚀 Разработка Системы Управления Банковскими Картами</h1>
+## Переменные окружения
 
-<h2>📁 Стартовая структура</h2>
-  <p>
-    Проектная структура с директориями и описательными файлами (<code>README Controller.md</code>, <code>README Service.md</code> и т.д.) уже подготовлена.<br />
-    Все реализации нужно добавлять <strong>в соответствующие директории</strong>.
-  </p>
-  <p>
-    После завершения разработки <strong>временные README-файлы нужно удалить</strong>, чтобы они не попадали в итоговую сборку.
-  </p>
-  
-<h2>📝 Описание задачи</h2>
-  <p>Разработать backend-приложение на Java (Spring Boot) для управления банковскими картами:</p>
-  <ul>
-    <li>Создание и управление картами</li>
-    <li>Просмотр карт</li>
-    <li>Переводы между своими картами</li>
-  </ul>
+Переопределяются через env-переменные или `application.yml`:
 
-<h2>💳 Атрибуты карты</h2>
-  <ul>
-    <li>Номер карты (зашифрован, отображается маской: <code>**** **** **** 1234</code>)</li>
-    <li>Владелец</li>
-    <li>Срок действия</li>
-    <li>Статус: Активна, Заблокирована, Истек срок</li>
-    <li>Баланс</li>
-  </ul>
-
-<h2>🧾 Требования</h2>
-
-<h3>✅ Аутентификация и авторизация</h3>
-  <ul>
-    <li>Spring Security + JWT</li>
-    <li>Роли: <code>ADMIN</code> и <code>USER</code></li>
-  </ul>
-
-<h3>✅ Возможности</h3>
-<strong>Администратор:</strong>
-  <ul>
-    <li>Создаёт, блокирует, активирует, удаляет карты</li>
-    <li>Управляет пользователями</li>
-    <li>Видит все карты</li>
-  </ul>
-
-<strong>Пользователь:</strong>
-  <ul>
-    <li>Просматривает свои карты (поиск + пагинация)</li>
-    <li>Запрашивает блокировку карты</li>
-    <li>Делает переводы между своими картами</li>
-    <li>Смотрит баланс</li>
-  </ul>
-
-<h3>✅ API</h3>
-  <ul>
-    <li>CRUD для карт</li>
-    <li>Переводы между своими картами</li>
-    <li>Фильтрация и постраничная выдача</li>
-    <li>Валидация и сообщения об ошибках</li>
-  </ul>
-
-<h3>✅ Безопасность</h3>
-  <ul>
-    <li>Шифрование данных</li>
-    <li>Ролевой доступ</li>
-    <li>Маскирование номеров карт</li>
-  </ul>
-
-<h3>✅ Работа с БД</h3>
-  <ul>
-    <li>PostgreSQL или MySQL</li>
-    <li>Миграции через Liquibase (<code>src/main/resources/db/migration</code>)</li>
-  </ul>
-
-<h3>✅ Документация</h3>
-  <ul>
-    <li>Swagger UI / OpenAPI — <code>docs/openapi.yaml</code></li>
-    <li><code>README.md</code> с инструкцией запуска</li>
-  </ul>
-
-<h3>✅ Развёртывание и тестирование</h3>
-  <ul>
-    <li>Docker Compose для dev-среды</li>
-    <li>Liquibase миграции</li>
-    <li>Юнит-тесты ключевой бизнес-логики</li>
-  </ul>
-
-<h2>📊 Оценка</h2>
-  <ul>
-    <li>Соответствие требованиям</li>
-    <li>Чистота архитектуры и кода</li>
-    <li>Безопасность</li>
-    <li>Обработка ошибок</li>
-    <li>Покрытие тестами</li>
-    <li>ООП и уровни абстракции</li>
-  </ul>
-
-<h2>💡 Технологии</h2>
-  <p>
-    Java 17+, Spring Boot, Spring Security, Spring Data JPA, PostgreSQL/MySQL, Liquibase, Docker, JWT, Swagger (OpenAPI)
-  </p>
-
-<h2> 📤 Формат сдачи</h2>
-<p>
-Весь код и изменения принимаются только через git-репозиторий с открытым доступом к проекту. Отправка файлов в любом виде не принимается.
-  </p>
+| Переменная | По умолчанию | Описание |
+|-----------|-------------|----------|
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/bank_db` | URL БД |
+| `SPRING_DATASOURCE_USERNAME` | `bankuser` | Пользователь БД |
+| `SPRING_DATASOURCE_PASSWORD` | `secret` | Пароль БД |
+| `APP_JWT_SECRET` | `my-super-secret-key-minimum-32-characters-long` | Секрет для подписи JWT |
+| `APP_JWT_EXPIRATION_MS` | `86400000` | Срок жизни токена (мс), по умолчанию 24 часа |

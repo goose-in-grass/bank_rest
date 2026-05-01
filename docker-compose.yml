@@ -13,25 +13,26 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bankuser -d bank_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   app:
-    image: maven:3.9.9-eclipse-temurin-17
+    build: .
     container_name: bank_app
-    working_dir: /app
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/bank_db
       SPRING_DATASOURCE_USERNAME: bankuser
       SPRING_DATASOURCE_PASSWORD: secret
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
-      SPRING_PROFILES_ACTIVE: docker
     ports:
       - "8080:8080"
-    volumes:
-      - ./:/app
-      - ~/.m2:/root/.m2
-    command: ["mvn", "spring-boot:run"]
+    restart: on-failure
 
 volumes:
   pgdata:
