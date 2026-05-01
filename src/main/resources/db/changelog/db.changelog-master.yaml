@@ -5,3 +5,7 @@ databaseChangeLog:
       file: db/changelog/002-create-cards-table.yaml
   - include:
       file: db/changelog/003-insert-admin-user.yaml
+  - include:
+      file: db/changelog/004-add-phone-to-users.yaml
+  - include:
+      file: db/changelog/005-create-card-requests-table.yaml

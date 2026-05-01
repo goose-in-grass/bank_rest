@@ -2,14 +2,12 @@ package com.example.bankcards.dto.Requests;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO для регистрации нового пользователя
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,4 +24,7 @@ public class RegisterRequest {
     @NotBlank(message = "Пароль не может быть пустым")
     @Size(min = 6, message = "Пароль должен содержать минимум 6 символов")
     private String password;
+
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Некорректный формат номера телефона")
+    private String phone;
 }

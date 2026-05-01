@@ -1,8 +1,10 @@
 package com.example.bankcards.service;
 
 import com.example.bankcards.dto.Requests.CreateCardRequest;
+import com.example.bankcards.dto.Requests.PhoneTransferRequest;
 import com.example.bankcards.dto.Requests.TransferRequest;
 import com.example.bankcards.dto.Responses.CardResponse;
+import com.example.bankcards.dto.Responses.TransferResponse;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.Enums.CardStatus;
 import com.example.bankcards.entity.Enums.Role;
@@ -12,6 +14,7 @@ import com.example.bankcards.exception.InsufficientFundsException;
 import com.example.bankcards.exception.InvalidCardStatusException;
 import com.example.bankcards.mapper.CardMapper;
 import com.example.bankcards.repository.Interfaces.CardRepository;
+import com.example.bankcards.repository.Interfaces.CardRequestRepository;
 import com.example.bankcards.repository.Interfaces.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +47,9 @@ class CardServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
+    private CardRequestRepository cardRequestRepository;
+
+    @Mock
     private CardMapper cardMapper;
 
     @InjectMocks
@@ -55,7 +61,7 @@ class CardServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        owner = new User(1L, "alice", "alice@example.com", "hash", Role.USER, null, null);
+        owner = new User(1L, "alice", "alice@example.com", "hash", Role.USER, null, null, "+79001234567");
 
         card1 = new Card();
         card1.setId(10L);
@@ -116,7 +122,7 @@ class CardServiceImplTest {
 
     @Test
     void getBalance_forForeignCard_shouldThrowException() {
-        User otherOwner = new User(2L, "bob", "bob@mail.com", "hash", Role.USER, null, null);
+        User otherOwner = new User(2L, "bob", "bob@mail.com", "hash", Role.USER, null, null, null);
         card1.setOwner(otherOwner);
 
         when(cardRepository.findById(10L)).thenReturn(Optional.of(card1));
@@ -136,37 +142,37 @@ class CardServiceImplTest {
 
     @Test
     void transfer_shouldMoveMoneyBetweenOwnCards() {
-        when(cardRepository.findByCardNumberEncrypted("1111222233331111")).thenReturn(Optional.of(card1));
-        when(cardRepository.findByCardNumberEncrypted("2222333344442222")).thenReturn(Optional.of(card2));
+        when(cardRepository.findById(10L)).thenReturn(Optional.of(card1));
+        when(cardRepository.findById(20L)).thenReturn(Optional.of(card2));
 
-        TransferRequest request = new TransferRequest("1111222233331111", "2222333344442222", new BigDecimal("150.00"));
+        TransferRequest request = new TransferRequest(10L, 20L, new BigDecimal("150.00"));
 
-        cardService.transfer(request, 1L);
+        TransferResponse response = cardService.transfer(request, 1L);
 
         assertEquals(new BigDecimal("350.00"), card1.getBalance());
         assertEquals(new BigDecimal("450.00"), card2.getBalance());
+        assertEquals(new BigDecimal("350.00"), response.getRemainingBalance());
         verify(cardRepository, times(2)).save(any(Card.class));
     }
 
     @Test
     void transfer_fromForeignCard_shouldThrowException() {
-        User otherUser = new User(2L, "bob", "...", "...", Role.USER, null, null);
+        User otherUser = new User(2L, "bob", "...", "...", Role.USER, null, null, null);
         card1.setOwner(otherUser);
 
-        when(cardRepository.findByCardNumberEncrypted("1111222233331111")).thenReturn(Optional.of(card1));
-        when(cardRepository.findByCardNumberEncrypted("2222333344442222")).thenReturn(Optional.of(card2));
+        when(cardRepository.findById(10L)).thenReturn(Optional.of(card1));
 
-        TransferRequest request = new TransferRequest("1111222233331111", "2222333344442222", new BigDecimal("100"));
+        TransferRequest request = new TransferRequest(10L, 20L, new BigDecimal("100"));
 
         assertThrows(IllegalArgumentException.class, () -> cardService.transfer(request, 1L));
     }
 
     @Test
     void transfer_withInsufficientFunds_shouldThrowException() {
-        when(cardRepository.findByCardNumberEncrypted("1111222233331111")).thenReturn(Optional.of(card1));
-        when(cardRepository.findByCardNumberEncrypted("2222333344442222")).thenReturn(Optional.of(card2));
+        when(cardRepository.findById(10L)).thenReturn(Optional.of(card1));
+        when(cardRepository.findById(20L)).thenReturn(Optional.of(card2));
 
-        TransferRequest request = new TransferRequest("1111222233331111", "2222333344442222", new BigDecimal("9999.00"));
+        TransferRequest request = new TransferRequest(10L, 20L, new BigDecimal("9999.00"));
 
         assertThrows(InsufficientFundsException.class, () -> cardService.transfer(request, 1L));
     }
@@ -175,12 +181,60 @@ class CardServiceImplTest {
     void transfer_withBlockedCard_shouldThrowException() {
         card1.setStatus(CardStatus.BLOCKED);
 
-        when(cardRepository.findByCardNumberEncrypted("1111222233331111")).thenReturn(Optional.of(card1));
-        when(cardRepository.findByCardNumberEncrypted("2222333344442222")).thenReturn(Optional.of(card2));
+        when(cardRepository.findById(10L)).thenReturn(Optional.of(card1));
+        when(cardRepository.findById(20L)).thenReturn(Optional.of(card2));
 
-        TransferRequest request = new TransferRequest("1111222233331111", "2222333344442222", new BigDecimal("100.00"));
+        TransferRequest request = new TransferRequest(10L, 20L, new BigDecimal("100.00"));
 
         assertThrows(InvalidCardStatusException.class, () -> cardService.transfer(request, 1L));
+    }
+
+    @Test
+    void transferByPhone_shouldMoveMoneyToRecipientCard() {
+        User recipient = new User(2L, "bob", "bob@mail.com", "hash", Role.USER, null, null, "+79009999999");
+
+        Card recipientCard = new Card();
+        recipientCard.setId(30L);
+        recipientCard.setOwner(recipient);
+        recipientCard.setStatus(CardStatus.ACTIVE);
+        recipientCard.setBalance(new BigDecimal("200.00"));
+
+        when(cardRepository.findById(10L)).thenReturn(Optional.of(card1));
+        when(userRepository.findByPhone("+79009999999")).thenReturn(Optional.of(recipient));
+        when(cardRepository.findFirstByOwnerIdAndStatus(2L, CardStatus.ACTIVE)).thenReturn(Optional.of(recipientCard));
+
+        PhoneTransferRequest request = new PhoneTransferRequest(10L, "+79009999999", new BigDecimal("100.00"));
+
+        TransferResponse response = cardService.transferByPhone(request, 1L);
+
+        assertEquals(new BigDecimal("400.00"), card1.getBalance());
+        assertEquals(new BigDecimal("300.00"), recipientCard.getBalance());
+        assertEquals(10L, response.getFromCardId());
+        assertEquals(30L, response.getToCardId());
+        assertEquals(new BigDecimal("400.00"), response.getRemainingBalance());
+    }
+
+    @Test
+    void transferByPhone_withUnknownPhone_shouldThrowException() {
+        when(cardRepository.findById(10L)).thenReturn(Optional.of(card1));
+        when(userRepository.findByPhone("+79000000000")).thenReturn(Optional.empty());
+
+        PhoneTransferRequest request = new PhoneTransferRequest(10L, "+79000000000", new BigDecimal("50.00"));
+
+        assertThrows(IllegalArgumentException.class, () -> cardService.transferByPhone(request, 1L));
+    }
+
+    @Test
+    void transferByPhone_recipientHasNoActiveCards_shouldThrowException() {
+        User recipient = new User(2L, "bob", "bob@mail.com", "hash", Role.USER, null, null, "+79009999999");
+
+        when(cardRepository.findById(10L)).thenReturn(Optional.of(card1));
+        when(userRepository.findByPhone("+79009999999")).thenReturn(Optional.of(recipient));
+        when(cardRepository.findFirstByOwnerIdAndStatus(2L, CardStatus.ACTIVE)).thenReturn(Optional.empty());
+
+        PhoneTransferRequest request = new PhoneTransferRequest(10L, "+79009999999", new BigDecimal("50.00"));
+
+        assertThrows(IllegalArgumentException.class, () -> cardService.transferByPhone(request, 1L));
     }
 
     @Test

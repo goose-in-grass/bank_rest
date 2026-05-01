@@ -92,8 +92,10 @@ async function register() {
         const username = document.getElementById("username").value.trim();
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value;
+        const phoneEl = document.getElementById("phone");
+        const phone = phoneEl ? phoneEl.value.trim() || null : null;
 
-        const data = await apiPost("/api/auth/register", { username, email, password });
+        const data = await apiPost("/api/auth/register", { username, email, password, phone });
 
         setOutput(data);
         setTimeout(() => {

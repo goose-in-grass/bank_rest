@@ -130,7 +130,7 @@ class AdminCardControllerTest {
                 .balance(new BigDecimal("200.00"))
                 .build();
 
-        when(cardService.getAllCards(any(Pageable.class), isNull()))
+        when(cardService.getAllCards(any(Pageable.class), isNull(), isNull()))
                 .thenReturn(new PageImpl<>(List.of(card)));
 
         mockMvc.perform(get("/api/admin/cards"))

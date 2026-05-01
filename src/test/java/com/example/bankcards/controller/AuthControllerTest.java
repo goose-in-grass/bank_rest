@@ -91,7 +91,7 @@ class AuthControllerTest {
 
     @Test
     void register_shouldReturnToken() throws Exception {
-        RegisterRequest request = new RegisterRequest("bob", "bob@example.com", "password123");
+        RegisterRequest request = new RegisterRequest("bob", "bob@example.com", "password123", null);
         LoginResponse response = LoginResponse.builder()
                 .token("new-token")
                 .username("bob")
@@ -117,7 +117,7 @@ class AuthControllerTest {
 
     @Test
     void register_withInvalidEmail_shouldReturn400() throws Exception {
-        RegisterRequest request = new RegisterRequest("bob", "not-an-email", "password123");
+        RegisterRequest request = new RegisterRequest("bob", "not-an-email", "password123", null);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -127,7 +127,7 @@ class AuthControllerTest {
 
     @Test
     void register_withShortPassword_shouldReturn400() throws Exception {
-        RegisterRequest request = new RegisterRequest("bob", "bob@example.com", "123");
+        RegisterRequest request = new RegisterRequest("bob", "bob@example.com", "123", null);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -137,7 +137,7 @@ class AuthControllerTest {
 
     @Test
     void register_withBlankUsername_shouldReturn400() throws Exception {
-        RegisterRequest request = new RegisterRequest("", "bob@example.com", "password123");
+        RegisterRequest request = new RegisterRequest("", "bob@example.com", "password123", null);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

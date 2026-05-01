@@ -26,7 +26,7 @@ class AuthServiceImplTest {
 
     @Test
     void login_shouldReturnToken() {
-        User user = new User(1L, "alice", "alice@example.com", passwordEncoder.encode("password123"), Role.USER, null, null);
+        User user = new User(1L, "alice", "alice@example.com", passwordEncoder.encode("password123"), Role.USER, null, null, null);
 
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
         when(jwtUtil.generateToken(user)).thenReturn("jwt-token");
@@ -43,7 +43,7 @@ class AuthServiceImplTest {
 
     @Test
     void login_withWrongPassword_shouldThrowBadCredentials() {
-        User user = new User(1L, "alice", "alice@example.com", passwordEncoder.encode("password123"), Role.USER, null, null);
+        User user = new User(1L, "alice", "alice@example.com", passwordEncoder.encode("password123"), Role.USER, null, null, null);
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
 
         assertThrows(BadCredentialsException.class,
@@ -63,12 +63,12 @@ class AuthServiceImplTest {
         when(userRepository.existsByUsername("bob")).thenReturn(false);
         when(userRepository.existsByEmail("bob@example.com")).thenReturn(false);
 
-        User saved = new User(2L, "bob", "bob@example.com", passwordEncoder.encode("password123"), Role.USER, null, null);
+        User saved = new User(2L, "bob", "bob@example.com", passwordEncoder.encode("password123"), Role.USER, null, null, null);
         when(userRepository.save(any(User.class))).thenReturn(saved);
         when(jwtUtil.generateToken(saved)).thenReturn("new-token");
         when(jwtUtil.getExpirationMs()).thenReturn(86400000L);
 
-        LoginResponse response = authService.register(new RegisterRequest("bob", "bob@example.com", "password123"));
+        LoginResponse response = authService.register(new RegisterRequest("bob", "bob@example.com", "password123", null));
 
         assertEquals("new-token", response.getToken());
         assertEquals("bob", response.getUsername());
@@ -78,11 +78,39 @@ class AuthServiceImplTest {
     }
 
     @Test
+    void register_withPhone_shouldSavePhone() {
+        when(userRepository.existsByUsername("bob")).thenReturn(false);
+        when(userRepository.existsByEmail("bob@example.com")).thenReturn(false);
+        when(userRepository.existsByPhone("+79001234567")).thenReturn(false);
+
+        User saved = new User(2L, "bob", "bob@example.com", passwordEncoder.encode("password123"), Role.USER, null, null, "+79001234567");
+        when(userRepository.save(any(User.class))).thenReturn(saved);
+        when(jwtUtil.generateToken(saved)).thenReturn("new-token");
+        when(jwtUtil.getExpirationMs()).thenReturn(86400000L);
+
+        authService.register(new RegisterRequest("bob", "bob@example.com", "password123", "+79001234567"));
+
+        verify(userRepository).save(argThat(u -> "+79001234567".equals(u.getPhone())));
+    }
+
+    @Test
+    void register_withDuplicatePhone_shouldThrowException() {
+        when(userRepository.existsByUsername("bob")).thenReturn(false);
+        when(userRepository.existsByEmail("bob@example.com")).thenReturn(false);
+        when(userRepository.existsByPhone("+79001234567")).thenReturn(true);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> authService.register(new RegisterRequest("bob", "bob@example.com", "password123", "+79001234567")));
+
+        assertEquals("Пользователь с таким номером телефона уже существует", ex.getMessage());
+    }
+
+    @Test
     void register_withDuplicateUsername_shouldThrowException() {
         when(userRepository.existsByUsername("bob")).thenReturn(true);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> authService.register(new RegisterRequest("bob", "bob@example.com", "password123")));
+                () -> authService.register(new RegisterRequest("bob", "bob@example.com", "password123", null)));
 
         assertEquals("Пользователь с таким именем уже существует", ex.getMessage());
     }
@@ -93,7 +121,7 @@ class AuthServiceImplTest {
         when(userRepository.existsByEmail("bob@example.com")).thenReturn(true);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> authService.register(new RegisterRequest("bob", "bob@example.com", "password123")));
+                () -> authService.register(new RegisterRequest("bob", "bob@example.com", "password123", null)));
 
         assertEquals("Пользователь с таким email уже существует", ex.getMessage());
     }

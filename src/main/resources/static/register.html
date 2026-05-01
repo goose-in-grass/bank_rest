@@ -8,14 +8,19 @@
         body { margin:0; font-family: Arial, sans-serif; background:#0f172a; color:#e5e7eb; }
         .wrap { max-width:520px; margin:40px auto; padding:24px; }
         .card { background:#111827; border:1px solid #374151; border-radius:16px; padding:24px; }
-        label { display:block; margin:12px 0 6px; color:#9ca3af; font-size:14px; }
+        h1 { margin: 0 0 4px; font-size: 22px; }
+        p.muted { margin: 0 0 20px; color:#9ca3af; font-size:14px; }
+        label { display:block; margin:12px 0 6px; color:#9ca3af; font-size:13px; }
         input, button { width:100%; box-sizing:border-box; border-radius:10px; padding:12px; font-size:14px; }
-        input { border:1px solid #374151; background:#0b1220; color:#e5e7eb; }
-        button { margin-top:12px; border:none; cursor:pointer; font-weight:700; }
+        input { border:1px solid #374151; background:#0b1220; color:#e5e7eb; transition: border-color 0.2s; }
+        input:focus { outline: none; border-color: #3b82f6; }
+        button { margin-top:12px; border:none; cursor:pointer; font-weight:700; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
         .primary { background:#34d399; color:#052e2b; }
         .secondary { background:#374151; color:white; }
         .muted { color:#9ca3af; font-size:13px; }
-        pre { margin-top:16px; white-space:pre-wrap; background:#020617; padding:12px; border-radius:12px; border:1px solid #374151; min-height:80px; }
+        .hint { color:#64748b; font-size:12px; margin-top: -8px; margin-bottom: 10px; }
+        pre { margin-top:16px; white-space:pre-wrap; background:#020617; padding:12px; border-radius:12px; border:1px solid #374151; min-height:80px; font-size:13px; color:#a5f3fc; }
         .toplinks { display:flex; justify-content:space-between; margin-top:14px; font-size:14px; }
         a { color:#93c5fd; text-decoration:none; }
     </style>
@@ -32,15 +37,22 @@
         <label for="email">Email</label>
         <input id="email" type="email" placeholder="user@mail.com">
 
+        <label for="phone">Номер телефона</label>
+        <input id="phone" type="tel" placeholder="+79001234567">
+        <div class="hint">Необязательно. Используется для переводов по номеру телефона.</div>
+
         <label for="password">Пароль</label>
         <input id="password" type="password" placeholder="••••••••">
 
         <button class="primary" onclick="register()">Зарегистрироваться</button>
         <button class="secondary" onclick="goLogin()">Уже есть аккаунт</button>
 
-
-
         <pre id="output">{}</pre>
+
+        <div class="toplinks">
+            <a href="/login.html">Войти</a>
+            <a href="/home.html">На главную</a>
+        </div>
     </div>
 </div>
 

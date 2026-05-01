@@ -44,12 +44,17 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Пользователь с таким email уже существует");
         }
 
+        if (request.getPhone() != null && userRepository.existsByPhone(request.getPhone())) {
+            throw new IllegalArgumentException("Пользователь с таким номером телефона уже существует");
+        }
+
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
         user.setCreatedAt(LocalDateTime.now());
+        user.setPhone(request.getPhone());
 
         User saved = userRepository.save(user);
         return buildResponse(saved);

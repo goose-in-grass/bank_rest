@@ -1,13 +1,17 @@
 package com.example.bankcards.controller;
 
+import com.example.bankcards.dto.Requests.PhoneTransferRequest;
+import com.example.bankcards.dto.Requests.RequestCardRequest;
 import com.example.bankcards.dto.Requests.TransferRequest;
-import jakarta.validation.Valid;
+import com.example.bankcards.dto.Responses.CardRequestResponse;
 import com.example.bankcards.dto.Responses.CardResponse;
+import com.example.bankcards.dto.Responses.TransferResponse;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.repository.Interfaces.UserRepository;
 import com.example.bankcards.service.CardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,12 +23,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/cards")
 @RequiredArgsConstructor
+@Tag(name = "Cards")
 public class CardController {
 
     private final CardService cardService;
     private final UserRepository userRepository;
 
-    @Operation(summary = "Получить список своих карт ")
+    @Operation(summary = "Получить список своих карт")
     @GetMapping
     public ResponseEntity<Page<CardResponse>> getMyCards(
             @AuthenticationPrincipal UserDetails user,
@@ -57,25 +62,40 @@ public class CardController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "Перевод между картами")
+    @Operation(summary = "Перевод между картами по ID карт")
     @PostMapping("/transfer")
-    public ResponseEntity<Void> transfer(
+    public ResponseEntity<TransferResponse> transfer(
             @AuthenticationPrincipal UserDetails user,
             @Valid @RequestBody TransferRequest request) {
 
         Long userId = getUserIdFromPrincipal(user);
-        cardService.transfer(request, userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(cardService.transfer(request, userId));
+    }
+
+    @Operation(summary = "Перевод по номеру телефона получателя")
+    @PostMapping("/transfer/phone")
+    public ResponseEntity<TransferResponse> transferByPhone(
+            @AuthenticationPrincipal UserDetails user,
+            @Valid @RequestBody PhoneTransferRequest request) {
+
+        Long userId = getUserIdFromPrincipal(user);
+        return ResponseEntity.ok(cardService.transferByPhone(request, userId));
+    }
+
+    @Operation(summary = "Запрос на выпуск новой карты")
+    @PostMapping("/request")
+    public ResponseEntity<CardRequestResponse> requestCard(
+            @AuthenticationPrincipal UserDetails user,
+            @Valid @RequestBody RequestCardRequest request) {
+
+        Long userId = getUserIdFromPrincipal(user);
+        return ResponseEntity.ok(cardService.requestCard(request.getCardholderName(), userId));
     }
 
     private Long getUserIdFromPrincipal(UserDetails user) {
-        if (user == null) {
-            throw new IllegalArgumentException("Пользователь не авторизован");
-        }
-
+        if (user == null) throw new IllegalArgumentException("Пользователь не авторизован");
         User currentUser = userRepository.findByUsername(user.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
-
         return currentUser.getId();
     }
 }

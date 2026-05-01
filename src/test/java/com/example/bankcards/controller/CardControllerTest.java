@@ -1,8 +1,10 @@
 package com.example.bankcards.controller;
 
 import com.example.bankcards.config.SecurityConfig;
+import com.example.bankcards.dto.Requests.PhoneTransferRequest;
 import com.example.bankcards.dto.Requests.TransferRequest;
 import com.example.bankcards.dto.Responses.CardResponse;
+import com.example.bankcards.dto.Responses.TransferResponse;
 import com.example.bankcards.entity.Enums.Role;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.repository.Interfaces.UserRepository;
@@ -52,7 +54,7 @@ class CardControllerTest {
 
     @BeforeEach
     void setUp() {
-        User alice = new User(1L, "alice", "alice@example.com", "encoded", Role.USER, null, null);
+        User alice = new User(1L, "alice", "alice@example.com", "encoded", Role.USER, null, null, "+79001234567");
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(alice));
     }
 
@@ -117,17 +119,25 @@ class CardControllerTest {
 
     @Test
     @WithMockUser(username = "alice")
-    void transfer_shouldReturnOk() throws Exception {
-        TransferRequest request = new TransferRequest(
-                "1111222233331111",
-                "2222333344442222",
-                new BigDecimal("100.00")
-        );
+    void transfer_shouldReturnTransferResponse() throws Exception {
+        TransferRequest request = new TransferRequest(10L, 20L, new BigDecimal("100.00"));
+
+        TransferResponse response = TransferResponse.builder()
+                .fromCardId(10L)
+                .toCardId(20L)
+                .amount(new BigDecimal("100.00"))
+                .remainingBalance(new BigDecimal("400.00"))
+                .build();
+
+        when(cardService.transfer(any(TransferRequest.class), eq(1L))).thenReturn(response);
 
         mockMvc.perform(post("/api/cards/transfer")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fromCardId").value(10))
+                .andExpect(jsonPath("$.toCardId").value(20))
+                .andExpect(jsonPath("$.remainingBalance").value(400.00));
 
         verify(cardService).transfer(any(TransferRequest.class), eq(1L));
     }
@@ -138,5 +148,30 @@ class CardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void transferByPhone_shouldReturnTransferResponse() throws Exception {
+        PhoneTransferRequest request = new PhoneTransferRequest(10L, "+79001234567", new BigDecimal("50.00"));
+
+        TransferResponse response = TransferResponse.builder()
+                .fromCardId(10L)
+                .toCardId(30L)
+                .amount(new BigDecimal("50.00"))
+                .remainingBalance(new BigDecimal("450.00"))
+                .build();
+
+        when(cardService.transferByPhone(any(PhoneTransferRequest.class), eq(1L))).thenReturn(response);
+
+        mockMvc.perform(post("/api/cards/transfer/phone")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fromCardId").value(10))
+                .andExpect(jsonPath("$.toCardId").value(30))
+                .andExpect(jsonPath("$.remainingBalance").value(450.00));
+
+        verify(cardService).transferByPhone(any(PhoneTransferRequest.class), eq(1L));
     }
 }
