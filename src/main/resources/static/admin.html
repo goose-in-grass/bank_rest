@@ -390,11 +390,20 @@
   // ---- AUTH CHECK ----
   window.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('bank-rest-token');
+    const role  = getRole();
+
     if (!token) {
-      alert('Необходима авторизация. Войдите как администратор.');
+      alert('Необходима авторизация.');
       window.location.href = '/login.html';
       return;
     }
+
+    if (role && role !== 'ADMIN') {
+      alert('Доступ запрещён. Эта страница только для администраторов.');
+      window.location.href = '/home.html';
+      return;
+    }
+
     loadAllCards();
     loadPendingCount();
   });

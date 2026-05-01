@@ -23,13 +23,12 @@ public class Card {
     private String cardNumberEncrypted;
 
     @Column(name = "card_number_masked", nullable = false)
-    private String cardNumberMasked;   // отдаётся в API
+    private String cardNumberMasked;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    //Использовать в будущем, если понадобится сохранять имя держателя карты
     @Column(name = "cardholder_name", nullable = false)
     private String cardholderName;
 
@@ -46,5 +45,3 @@ public class Card {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 }
-
-//TODO: перепроверить поля

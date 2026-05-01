@@ -11,9 +11,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-/**
- * DTO для запроса на создание новой карты
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

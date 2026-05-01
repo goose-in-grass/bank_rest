@@ -12,6 +12,15 @@ function setToken(token) {
     localStorage.setItem("bank-rest-token", appToken);
 }
 
+function setRole(role) {
+    if (role) localStorage.setItem("bank-rest-role", role);
+    else localStorage.removeItem("bank-rest-role");
+}
+
+function getRole() {
+    return localStorage.getItem("bank-rest-role") || "";
+}
+
 function getHeaders(json = true) {
     const headers = {};
     if (json) {
@@ -72,6 +81,7 @@ async function login() {
 
         if (data && data.token) {
             setToken(data.token);
+            setRole(data.role);
         }
 
         setOutput(data);
@@ -108,5 +118,6 @@ async function register() {
 
 function logout() {
     setToken("");
+    setRole(null);
     window.location.href = "/login.html";
 }

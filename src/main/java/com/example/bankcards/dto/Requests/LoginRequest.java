@@ -6,9 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO для запроса авторизации
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
